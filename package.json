@@ -4,7 +4,7 @@
   "description": "A Node.js implementation of GB28181 Video Streaming Agent Server",
   "main": "index.js",
   "scripts": {
-    "test": "node app.js"
+    "test": "node vag.js"
   },
   "repository": {
     "type": "git",

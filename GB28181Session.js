@@ -299,39 +299,59 @@ class NodeSipSession {
                         case 0:
                             cmd[3] = 0x00;
                             break;
-                        //向右
+                        //组合--左上
                         case 1:
-                            cmd[3] = 0x01;
+                            cmd[3] = 0x0A;
                             cmd[4] = ptzSpeed;
-                            break;
-                        //向左
-                        case 2:
-                            cmd[3] = 0x02;
-                            cmd[4] = ptzSpeed;
-                            break;
-                        //向下
-                        case 3:
-                            cmd[3] = 0x04;
                             cmd[5] = ptzSpeed;
                             break;
                         //向上
-                        case 4:
+                        case 2:
                             cmd[3] = 0x08;
                             cmd[5] = ptzSpeed;
                             break;
-                        //放大
-                        case 5:
-                            cmd[3] = 0x10;
-                            cmd[6] = 0x10;
+                        //组合--右上
+                        case 3:
+                            cmd[3] = 0x09;
+                            cmd[4] = ptzSpeed;
+                            cmd[5] = ptzSpeed;
+                            break;
+                        //向左
+                        case 4:
+                            cmd[3] = 0x02;
+                            cmd[4] = ptzSpeed;
+                            break;
+                        //向右
+                        case 6:
+                            cmd[3] = 0x01;
+                            cmd[4] = ptzSpeed;
+                            break;
+                        //组合--左下
+                        case 7:
+                            cmd[3] = 0x06;
+                            cmd[4] = ptzSpeed;
+                            cmd[5] = ptzSpeed;
+                            break;
+                        //向下
+                        case 8:
+                            cmd[3] = 0x04;
+                            cmd[5] = ptzSpeed;
+                            break;
+                        //组合--右下
+                        case 9:
+                            cmd[3] = 0x05;
+                            cmd[4] = ptzSpeed;
+                            cmd[5] = ptzSpeed;
                             break;
                         //缩小
-                        case 6:
+                        case 10:
                             cmd[3] = 0x20;
                             cmd[6] = 0x10;
                             break;
-                        //组合
-                        case 7:
-                            cmd[3] = 0x29;
+                        //放大
+                        case 11:
+                            cmd[3] = 0x10;
+                            cmd[6] = 0x10;
                             break;
                     }
 
@@ -509,8 +529,10 @@ class NodeSipSession {
                 `u=${channelId}:0\r\n` +
                 `c=IN IP4 ${host}\r\n` +
                 `t=${begin} ${end}\r\n` +
-                `m=video ${port} ${mValue} 96\r\n` +
+                `m=video ${port} ${mValue} 96 97 98\r\n` +
                 `a=rtpmap:96 PS/90000\r\n` +
+                `a=rtpmap:97 MPEG4/90000\r\n` +
+                `a=rtpmap:98 H264/90000\r\n` +
                 `a=recvonly\r\n` +
                 sdpV +
                 `y=${ssrc}\r\n` +
@@ -718,6 +740,7 @@ class NodeSipSession {
 
             for (var key in this.dialogs) {
                 let session = this.dialogs[key];
+                Logger.log('sessicon', session)
                 if (session.bye && session.port === rport && session.host === rhost && session.channelId === channelId && session.play === 'realplay') {
                     isFinded = true;
                     findssrc = session.ssrc;
@@ -727,6 +750,7 @@ class NodeSipSession {
 
             //己存在会话,同一个流媒体不需要重复请求
             if (isFinded) {
+                Logger.log('isFinish')
                 result.data = { ssrc: findssrc };
                 resolve(result);
                 return;
@@ -748,7 +772,9 @@ class NodeSipSession {
                     break;
                 case 1:
                     sdpV = `a=setup:passive\r\n` +
-                        `a=connection:new\r\n`;
+                        `a=connection:new\r\n` +
+                        `a=streamprofile:0\r\n` +
+                        `a=streamnumber:0\r\n`;
                     mValue = "TCP/RTP/AVP";
                     break;
                 case 2:
@@ -764,8 +790,10 @@ class NodeSipSession {
                 `s=Play\r\n` +
                 `c=IN IP4 ${host}\r\n` +
                 `t=0 0\r\n` +
-                `m=video ${port} ${mValue} 96\r\n` +
+                `m=video ${port} ${mValue} 96 97 98\r\n` +
                 `a=rtpmap:96 PS/90000\r\n` +
+                `a=rtpmap:97 MPEG4/90000\r\n` +
+                `a=rtpmap:98 H264/90000\r\n` +
                 `a=recvonly\r\n` +
                 sdpV +
                 `y=${ssrc}\r\n` +
@@ -836,7 +864,7 @@ class NodeSipSession {
                                                 to: response.headers.to,
                                                 from: response.headers.from,
                                                 'call-id': response.headers['call-id'],
-                                                cseq: { method: 'BYE', seq: response.headers.cseq.seq++ }//需额外加1
+                                                cseq: { method: 'BYE', seq: response.headers.cseq.seq+1 }//需额外加1
                                             }
                                         }
 
@@ -861,6 +889,7 @@ class NodeSipSession {
     async sendStopRealPlayMessage(channelId, rhost, rport) {
 
         return new Promise((resolve, reject) => {
+            Logger.log('222', channelId, rhost, rport)
             let result = { result: false, message: 'not find dialog.' };
 
             for (var key in this.dialogs) {
@@ -973,6 +1002,20 @@ class NodeSipSession {
         }
     }
 
+    // 处理摄像头主动发bye信令，推流的服务器有问题
+    onBye(request) {
+        for (var key in this.dialogs) {
+            let session = this.dialogs[key];
+            if (request.headers['call-id'] === session.bye.headers['call-id']) {
+                //发送BYE,删除会话
+                Logger.log(`[${this.id}] ActiceStopPlayback check media server`);
+                delete this.dialogs[key];
+
+                break;
+            }
+        }
+    }
+
     //发送SIP消息
     send(options) {
         //设备国标编码+设备主机地址+通讯端口
@@ -987,6 +1030,7 @@ class NodeSipSession {
                 'call-id': this.getCallId(),
                 cseq: { method: options.method, seq: Math.floor(Math.random() * 1e5) },
                 'content-type': options.contentType,
+                'User-Agent': 'NODE GB28181 SERVER V1', // 加上用户代理信息
                 subject: options.subject,
                 contact: [{ uri: 'sip:' + this.GBServerId + '@' + this.GBserverHost + ':' + this.GBServerPort }]
             },

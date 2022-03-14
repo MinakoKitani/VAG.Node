@@ -11,7 +11,7 @@ class NodeSIPServer {
         this.host = config.GB28181.sipServer.host || '127.0.0.1';//SIP服务器主机地址
         this.defaultPassword = config.GB28181.sipServer.password || '12345678';
         this.id=config.GB28181.sipServer.serial||'34020000002000000001';
-        this.domain = config.GBS28181.sipServer.realm || "3402000000";//SIP服务器域
+        this.domain = config.GB28181.sipServer.realm || "3402000000";//SIP服务器域
         this.config = config;
         //临时用户信息
         this.userinfo = {};
@@ -47,6 +47,24 @@ class NodeSIPServer {
                     this.uas.send(SIP.makeResponse(request, 405, 'Method not allowed'));
                     break;
             }
+            // 未指定方法的回复
+            if (!request.method) {
+                let userid = SIP.parseUri(request.headers.from.uri).user;
+                switch(request.status) {
+                    case 100:
+                        Logger.info(`[${userid}] Retrying`);
+                        break;
+                    case 400:
+                        Logger.error(`[${userid}] bad request`);
+                        break;
+                    case 481:
+                        Logger.error(`[${userid}] Call/Transaction Does Not Exist`);
+                        break;
+                    default:
+                        Logger.error(`[${userid}] unknow status=${request.status} request${request}`);
+                        break;
+                }
+            }
         });
 
         //注册&注销 请求
@@ -66,6 +84,16 @@ class NodeSIPServer {
                 session.onMessage(request);
             }
         });
+
+        // 处理摄像头主动发bye信令，推流的服务器有问题
+        context.nodeEvent.on('bye', (request) => {
+            this.uas.send(SIP.makeResponse(request, 200, 'Ok'));
+            let userid = SIP.parseUri(request.headers.from.uri).user;
+            if (context.sessions.has(userid)) {
+                let session = context.sessions.get(userid)
+                session.onBye(request)
+            }
+        })
 
         Logger.log(`Node Media GB28181 Sip-Server started on port: ${this.listen}`);
     }
@@ -104,7 +132,7 @@ class NodeSIPServer {
 
         //安全性检查
         if (toInfo.user.length != 20 || fromInfo.user.length != 20 || toInfo.user != fromInfo.user || serverInfo.user != this.id) {
-            Logger.log(`[${userId}] check fail. `);
+            Logger.log(`[${userId}] check fail. `, toInfo.user, fromInfo.user, serverInfo);
             return;
         }
 
