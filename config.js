@@ -36,5 +36,14 @@ var config = module.exports = {
             publish: false,
             secret: 'nodemedia2017privatekey'
         }
+    },
+    // ZLMediaKit服务器配置
+    ZLMediaKit: {
+        media_url: 'http://192.168.0.227:9094/',
+        secret: '035c73f7-bb6b-4889-a715-d9eb2d1925cc',
+        vhost: '__defaultVhost__',
+        app: 'rtp',
+        customized_path: encodeURI('D://毕设相关'), // 录像的保存路径,有中文才需要encodeURI
+        snap_path: 'D://毕设相关/__defaultVhost__/snap/'
     }
 };

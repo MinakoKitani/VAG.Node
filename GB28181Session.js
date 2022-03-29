@@ -36,7 +36,7 @@ class NodeSipSession {
         this.dialogs = {};
 
         //当前域
-        this.GBDomain = config.GB28181.sipServer.realm || '3402000000';
+        this.GBDomain = config.GB28181.sipServer.realm || '4200000040';
 
         //SIP服务通讯端口
         this.GBServerPort = config.GB28181.sipServer.mapPort || config.GB28181.sipServer.listen;

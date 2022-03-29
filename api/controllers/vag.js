@@ -1,3 +1,6 @@
+const axios = require('../../core/request');
+const config = require('../../config');
+const util = require('../../core/util');
 
 //获取所有SIP会话
 function getSessions(req, res, next) {
@@ -8,14 +11,17 @@ function getSessions(req, res, next) {
             sessions[session.id] = { host: session.via.host, port: session.via.port, info: session.deviceinfo, status: session.devicestatus, catalog: session.catalog };
     });
 
-    res.json(sessions);
+    res.json({
+        message: 'OK',
+        data: sessions
+    });
 }
 
 //获取指定设备ID的目录数据
 function getCatalog(req, res) {
     let result = { result: false, message: 'OK' };
-    if (this.sessions.has(req.params.device)) {
-        let session = this.sessions.get(req.params.device);
+    if (this.sessions.has(req.body.deviceId)) {
+        let session = this.sessions.get(req.body.deviceId);
 
         result.result = true;
         result.data = session.catalog;
@@ -31,25 +37,25 @@ async function realplay(req, res) {
 
     let result = { result: true, message: 'OK' };
 
-    if (this.sessions.has(req.params.device)) {
+    if (this.sessions.has(req.body.deviceId)) {
 
-        let session = this.sessions.get(req.params.device);
+        let session = this.sessions.get(req.body.deviceId);
 
         //判断当前设备通道里是否存在通道编码
-        let channelId = req.params.channel;
+        let channelId = req.body.channelId;
 
         let channel = session.catalog.devicelist.find(t => t.DeviceID === channelId);
 
         if (channel) {
-            switch (req.params.action) {
+            switch (req.body.action) {
                 case 'start':
                     {
-                        result = await session.sendRealPlayMessage(channelId, req.params.host, req.params.port, req.params.mode);
+                        result = await session.sendRealPlayMessage(channelId, req.body.mediaHost, req.body.mediaPort, req.body.mode);
                     }
                     break;
                 case 'stop':
                     {
-                        result = await session.sendStopRealPlayMessage(channelId, req.params.host, req.params.port);
+                        result = await session.sendStopRealPlayMessage(channelId, req.body.mediaHost, req.body.mediaPort);
                     }
                     break;
                 default:
@@ -147,15 +153,15 @@ async function playControl(req, res) {
 function ptzControl(req, res) {
     let result = {};
 
-    if (this.sessions.has(req.params.device)) {
-        let session = this.sessions.get(req.params.device);
+    if (this.sessions.has(req.body.deviceId)) {
+        let session = this.sessions.get(req.body.deviceId);
 
         //判断当前设备通道里是否存在通道编码
-        let channelId = req.params.channel;
+        let channelId = req.body.channelId;
         let channel = session.catalog.devicelist.find(t => t.DeviceID === channelId);
 
         if (channel) {
-            session.ControlPTZ(req.params.channel, req.params.value);
+            session.ControlPTZ(req.body.channelId, req.body.controlCode);
 
             result.result = true;
             result.message = 'OK';
@@ -228,8 +234,8 @@ function closeStream(req, res) {
         let selectSession = null;
         let selectDialog = null;
 
-        for (session in this.sessions.values()) {
-            let dialogs = sessson.dialogs;
+        this.sessions.forEach(function (session, id) {
+            let dialogs = session.dialogs;
             for (var key in dialogs) {
                 let dialog = dialogs[key];
                 if (dialog.ssrc && dialog.ssrc === ssrc) {
@@ -238,7 +244,7 @@ function closeStream(req, res) {
                     return;
                 }
             }
-        }
+        });
 
         if (selectDialog != null && selectSession != null) {
             if (selectDialog.play) {
@@ -261,8 +267,213 @@ function closeStream(req, res) {
     res.json(result);
 }
 
+// zlm监听无人观看事件，不断流
+function zlmNoneReader (req, res) {
+    const result = { code: 0, close: false };
+    res.json(result);
+}
+
+// 判断是否存在此流
+function hasSsrc(stream, sessions) {
+    let result = null
+    //16位进制转10进制
+    let ssrc = parseInt(stream, 16);
+    //要补位
+    ssrc = _prefixInteger(ssrc, 10);
+
+    sessions.forEach(function (session) {
+        let dialogs = session.dialogs;
+        for (var key in dialogs) {
+            let dialog = dialogs[key];
+            if (dialog.ssrc && dialog.ssrc === ssrc) {
+                result = dialogs[key];
+            }
+        }
+    });
+    return result
+}
+
+// 截图
+async function snap(req, res) {
+    let body = req.params;
+
+    let result = { code: 0, msg: 'success' };
+
+    if (body.stream) {
+
+        const dialog = hasSsrc(body.stream, this.sessions);
+
+        if (dialog) {
+            // 发送请求,用zlm截图保存的图片路径不支持自定义,改用fluent-ffmpeg,fluent会报错，使用pipe来接然后写进本地文件夹
+            // await axios.pipe(`${config.ZLMediaKit.media_url}index/api/getSnap`, {
+            //     secret: config.ZLMediaKit.secret,
+            //     url: `${config.ZLMediaKit.media_url}rtp/${body.stream}.flv`,
+            //     timeout_sec: 10,
+            //     expire_sec: 20
+            // }, `${config.ZLMediaKit.snap_path}/${util.formatDate()}`, `${dialog.channelId.substring(17)}.jpeg`);
+            // TODO 将原来zlm存的截图记得实时删除掉,看看有没有用axios可以用的方法,免得又要下载request依赖
+            await axios.pipe(`${config.ZLMediaKit.media_url}index/api/getSnap`, {
+                secret: config.ZLMediaKit.secret,
+                url: `${config.ZLMediaKit.media_url}rtp/${body.stream}.flv`,
+                timeout_sec: 10,
+                expire_sec: 20
+            }, `${config.ZLMediaKit.snap_path}${util.formatDate()}`, `${dialog.channelId.substring(17)}.jpeg`)
+            .then((res) => {
+                if (res.code === 0) {
+                    result = res;
+                }
+            })
+            .catch((err) => {
+                result = { code: 500, msg: err };
+            });
+        } else {
+            result = { code: 404, msg: 'stream not found.' };
+        }
+        // ffmpeg({source: `rtsp://127.0.0.1:554/${config.ZLMediaKit.app}/${body.stream}`, timeout: 20})
+        //     .on('filenames', function (filenames) {
+        //         console.log('Will generate ' + filenames.join(', '));
+        //     })
+        //     .on('end', function () {
+        //         console.log('ffmpeg end');
+        //     })
+        //     .on('stderr', function (stderrLine) {
+        //         console.log('Stderr output: ' + stderrLine);
+        //     })
+        //     .on('error', function (err) {
+        //         console.log('Cannot process video: error =', err.message);
+        //     })
+        //     // .addOption(['-rtsp_transport tcp'])
+        //     .screenshots({
+        //         count: 1,
+        //         // timemarks: [ '00:00:02.000' ],
+        //         folder: `${config.ZLMediaKit.customized_path}/${config.ZLMediaKit.vhost}/snap/`,
+        //         filename: '11111.jpg',
+        //         size: '640x?',
+        //         timeout: 20
+        //     });
+        //     result = { code: 0, msg: 'screenshot success', url: '11111.jpg', folder: `${config.ZLMediaKit.customized_path}/${config.ZLMediaKit.vhost}/snap` };
+    } else {
+        result = { code: 400, msg: 'invaild params' };
+    }
+
+    res.json(result);
+}
+
+// 开始录制
+async function startRecord(req, res) {
+    let body = req.params;
+
+    let result = { code: 0, msg: 'success' };
+
+    if (body.stream) {
+
+        const dialog = hasSsrc(body.stream, this.sessions);
+        if (dialog) {
+            // TODO  发送请求=>已完成
+            const data = await axios.get(`${config.ZLMediaKit.media_url}index/api/startRecord`, {
+                secret: config.ZLMediaKit.secret,
+                vhost: config.ZLMediaKit.vhost,
+                app: config.ZLMediaKit.app,
+                stream: body.stream,
+                customized_path: config.ZLMediaKit.customized_path,
+                type: 1
+            });
+            result = data;
+        } else {
+            result = { code: 404, msg: 'stream not found.' };
+        }
+    } else {
+        result = { code: 400, msg: 'invaild params' };
+    }
+
+    res.json(result);
+}
+
+// 停止录制
+async function stopRecord(req, res) {
+    let body = req.params;
+
+    let result = { code: 0, msg: 'success' };
+
+    if (body.stream) {
+        const dialog = hasSsrc(body.stream, this.sessions);
+        if (dialog) {
+            // TODO  发送请求=>已完成
+            const data = await axios.get(`${config.ZLMediaKit.media_url}index/api/stopRecord`, {
+                secret: config.ZLMediaKit.secret,
+                vhost: config.ZLMediaKit.vhost,
+                app: config.ZLMediaKit.app,
+                stream: body.stream,
+                customized_path: config.ZLMediaKit.customized_path,
+                type: 1
+            });
+            result = data;
+        } else {
+            result = { code: 404, msg: 'stream not found.' };
+        }
+    } else {
+        result = { code: 400, msg: 'invaild params' };
+    }
+
+    res.json(result);
+}
+
+// 记录zlm录制时保存的文件路径
+function zlmRecordPath (req, res) {
+    let result = { code: 0, msg: "success" };
+
+    if (req.body.app === config.ZLMediaKit.app && req.body.vhost === config.ZLMediaKit.vhost) {
+        // 10进制转16位进制
+        let ssrc = parseInt(req.body.stream, 16).toString();
+        ssrc = ssrc.padStart(10, 0);
+
+        this.sessions.forEach(function (session) {
+            let dialogs = session.dialogs;
+            for (var key in dialogs) {
+                let dialog = dialogs[key];
+                // TODO 存入数据库中
+                if (dialog.ssrc && dialog.ssrc === ssrc) {
+                    // dialog.file_path = req.body.file_path // 将录像文件路径存入会话中，每调用一次就更新一次
+                    console.log('record', req.body.file_path)
+                    res.json(result);
+                }
+            }
+        });
+    }
+}
+
+// zlm推流鉴权事件
+function zlmOnPublish (req, res) {
+    res.json({'code': 0, 'msg': 'success'});
+}
+
+// zlm监听播放器事件
+function zlmOnPlay (req, res) {
+    // TODO 考虑是否给摄像头发invite请求=》
+    // 如果不存在此ssrc,但每个摄像头已有ssrc且正在推流中则不允许播放
+    // 如果存在这个stream(ssrc)但未播放则允许发送invite请求
+    res.json({'code': 0, 'msg': 'success'});
+    // res.json({'code': 1, 'msg': '该流已断'});
+}
+
 function _prefixInteger(num, m) {
     return (Array(m).join(0) + num).slice(-m);
 }
 
-module.exports = { getCatalog: getCatalog, realplay: realplay, getSessions: getSessions, playback: playback, ptzControl: ptzControl, playControl: playControl, recordQuery: recordQuery, closeStream: closeStream }
+module.exports = {
+    getCatalog: getCatalog,
+    realplay: realplay,
+    getSessions: getSessions,
+    playback: playback,
+    ptzControl: ptzControl,
+    playControl: playControl,
+    recordQuery: recordQuery,
+    closeStream: closeStream,
+    snap: snap,
+    startRecord: startRecord,
+    stopRecord: stopRecord,
+    zlmNoneReader: zlmNoneReader,
+    zlmRecordPath: zlmRecordPath,
+    zlmOnPublish: zlmOnPublish,
+    zlmOnPlay: zlmOnPlay
+}

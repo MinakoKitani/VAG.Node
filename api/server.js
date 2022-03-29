@@ -30,7 +30,7 @@ class NodeHttpServer {
       app.use('/api/*', basicAuth(this.config.VAG.auth.api_user, this.config.VAG.auth.api_pass));
     }
 
-    app.use('/api/v1/vag', vagRoute(context));
+    app.use('/api/v1/camera', vagRoute(context));
 
     app.get('/', (req, res, next) => {
       res.setHeader('Content-type', 'application/json');
