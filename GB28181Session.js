@@ -732,7 +732,7 @@ class NodeSipSession {
 
         return new Promise((resolve, reject) => {
 
-            let result = { result: true, message: 'OK' };
+            let result = { stat: 'OK' };
 
             let isFinded = false;
 
@@ -813,7 +813,7 @@ class NodeSipSession {
                         //错误信息
                         Logger.error(`[${that.id}] ssrc=${ssrc} status=${response.status}`);
 
-                        result.result = false;
+                        result.stat = 'error';
                         result.data = { status: response.status };
                         result.message = `ErrorCode=${response.status}`;
 
@@ -889,8 +889,7 @@ class NodeSipSession {
     async sendStopRealPlayMessage(channelId, rhost, rport) {
 
         return new Promise((resolve, reject) => {
-            Logger.log('222', channelId, rhost, rport)
-            let result = { result: false, message: 'not find dialog.' };
+            let result = { stat: 'error', message: 'not find dialog.' };
 
             for (var key in this.dialogs) {
                 //搜索满足条件的会话
@@ -905,8 +904,8 @@ class NodeSipSession {
                         delete this.dialogs[key];
                     });
 
-                    result.result = true;
-                    result.message = 'OK';
+                    result.stat = 'OK';
+                    result.message = '';
                 }
             }
 

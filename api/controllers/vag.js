@@ -12,18 +12,18 @@ function getSessions(req, res, next) {
     });
 
     res.json({
-        message: 'OK',
+        stat: 'OK',
         data: sessions
     });
 }
 
 //获取指定设备ID的目录数据
 function getCatalog(req, res) {
-    let result = { result: false, message: 'OK' };
+    let result = { stat: 'error' };
     if (this.sessions.has(req.body.deviceId)) {
         let session = this.sessions.get(req.body.deviceId);
 
-        result.result = true;
+        result.stat = 'OK';
         result.data = session.catalog;
     }
     else {
@@ -35,7 +35,7 @@ function getCatalog(req, res) {
 //预览请求
 async function realplay(req, res) {
 
-    let result = { result: true, message: 'OK' };
+    let result = { stat: 'OK' };
 
     if (this.sessions.has(req.body.deviceId)) {
 
@@ -60,19 +60,19 @@ async function realplay(req, res) {
                     break;
                 default:
                     {
-                        result.result = false;
+                        result.stat = 'error';
                         result.message = 'action error.';
                     }
                     break;
             }
         }
         else {
-            result.result = false;
+            result.stat = 'error';
             result.message = 'device not found.';
         }
     }
     else {
-        result.result = false;
+        result.stat = 'error';
         result.message = 'device not online.';
     }
     res.json(result);
@@ -151,7 +151,7 @@ async function playControl(req, res) {
 
 //云台控制
 function ptzControl(req, res) {
-    let result = {};
+    let result = { stat: 'OK' };
 
     if (this.sessions.has(req.body.deviceId)) {
         let session = this.sessions.get(req.body.deviceId);
@@ -163,16 +163,15 @@ function ptzControl(req, res) {
         if (channel) {
             session.ControlPTZ(req.body.channelId, req.body.controlCode);
 
-            result.result = true;
             result.message = 'OK';
         }
         else {
-            result.result = false;
+            result.stat = 'error';
             result.message = 'device not found.';
         }
     }
     else {
-        result.result = false;
+        result.stat = 'error';
         result.message = 'device not online.';
     }
     res.json(result);
@@ -297,7 +296,7 @@ function hasSsrc(stream, sessions) {
 async function snap(req, res) {
     let body = req.params;
 
-    let result = { code: 0, msg: 'success' };
+    let result = { stat: 'OK' };
 
     if (body.stream) {
 
@@ -324,10 +323,10 @@ async function snap(req, res) {
                 }
             })
             .catch((err) => {
-                result = { code: 500, msg: err };
+                result = { stat: 'error', message: err };
             });
         } else {
-            result = { code: 404, msg: 'stream not found.' };
+            result = { stat: 'error', message: 'stream not found.' };
         }
         // ffmpeg({source: `rtsp://127.0.0.1:554/${config.ZLMediaKit.app}/${body.stream}`, timeout: 20})
         //     .on('filenames', function (filenames) {
@@ -353,7 +352,7 @@ async function snap(req, res) {
         //     });
         //     result = { code: 0, msg: 'screenshot success', url: '11111.jpg', folder: `${config.ZLMediaKit.customized_path}/${config.ZLMediaKit.vhost}/snap` };
     } else {
-        result = { code: 400, msg: 'invaild params' };
+        result = { stat: 'error', message: 'invaild params' };
     }
 
     res.json(result);
@@ -363,7 +362,7 @@ async function snap(req, res) {
 async function startRecord(req, res) {
     let body = req.params;
 
-    let result = { code: 0, msg: 'success' };
+    let result = { stat: 'OK' };
 
     if (body.stream) {
 
@@ -378,12 +377,12 @@ async function startRecord(req, res) {
                 customized_path: config.ZLMediaKit.customized_path,
                 type: 1
             });
-            result = data;
+            result = { ...data, ...result };
         } else {
-            result = { code: 404, msg: 'stream not found.' };
+            result = { stat: 'error', message: 'stream not found.' };
         }
     } else {
-        result = { code: 400, msg: 'invaild params' };
+        result = { stat: 'error', message: 'invaild params' };
     }
 
     res.json(result);
@@ -393,7 +392,7 @@ async function startRecord(req, res) {
 async function stopRecord(req, res) {
     let body = req.params;
 
-    let result = { code: 0, msg: 'success' };
+    let result = { stat: 'OK' };
 
     if (body.stream) {
         const dialog = hasSsrc(body.stream, this.sessions);
@@ -407,12 +406,12 @@ async function stopRecord(req, res) {
                 customized_path: config.ZLMediaKit.customized_path,
                 type: 1
             });
-            result = data;
+            result = { ...data, ...result };
         } else {
-            result = { code: 404, msg: 'stream not found.' };
+            result = { stat: 'error', message: 'stream not found.' };
         }
     } else {
-        result = { code: 400, msg: 'invaild params' };
+        result = { stat: 'error', message: 'invaild params' };
     }
 
     res.json(result);
@@ -420,7 +419,7 @@ async function stopRecord(req, res) {
 
 // 记录zlm录制时保存的文件路径
 function zlmRecordPath (req, res) {
-    let result = { code: 0, msg: "success" };
+    let result = { stat: 'OK' };
 
     if (req.body.app === config.ZLMediaKit.app && req.body.vhost === config.ZLMediaKit.vhost) {
         // 10进制转16位进制

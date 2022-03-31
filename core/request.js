@@ -49,7 +49,7 @@ function pipe (url, params, path, name) {
 			if (!error && response.statusCode == 200) {
 					let stream = fs.createWriteStream(`${path}/${name}`);
 					request(url + query).pipe(stream).on("close", function (err) {
-							resolve({ code: 0, path: `${path}/${name}`, msg: "success"});
+							resolve({ stat: 'OK', path: `${path}/${name}`});
 					});
 			} else {
 					if (error) {

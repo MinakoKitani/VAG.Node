@@ -587,11 +587,6 @@ request@^2.88.2:
     tunnel-agent "^0.6.0"
     uuid "^3.3.2"
 
-rtp-rtcp@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.npmmirror.com/rtp-rtcp/-/rtp-rtcp-0.0.2.tgz#67f5bb22149c2cd40797ea1a6da520c69c648bfa"
-  integrity sha512-gBBv+8TlOWgExhB6zP0NWU916Hzogy/3LMacNcTlFyMaYPgwXfS5JUFQ0libP4DsFHXZJjwQahhqT472GJH92g==
-
 safe-buffer@5.2.1, safe-buffer@^5.0.1, safe-buffer@^5.1.2:
   version "5.2.1"
   resolved "https://registry.npmmirror.com/safe-buffer/-/safe-buffer-5.2.1.tgz#1eaf9fa9bdb1fdd4ec75f58f9cdb4e6b7827eec6"
