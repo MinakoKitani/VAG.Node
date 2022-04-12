@@ -508,7 +508,7 @@ class NodeSipSession {
       let ssrc = "1" + channelId.substring(3, 8) + streamId;
 
       let host = nhost || "127.0.0.1";
-      let port = nport || 9200;
+      let port = nport || 10000;
 
       let sdpV = "";
       let mValue = "RTP/AVP";
@@ -764,7 +764,7 @@ class NodeSipSession {
 
       let host = rhost || "127.0.0.1";
 
-      let port = rport || 9200;
+      let port = rport || 10000;
 
       let sdpV = "";
       let mValue = "RTP/AVP";

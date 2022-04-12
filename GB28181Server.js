@@ -10,8 +10,8 @@ class NodeSIPServer {
     this.listen = config.GB28181.sipServer.listen || 5060;
     this.host = config.GB28181.sipServer.host || "127.0.0.1";// SIP服务器主机地址
     this.defaultPassword = config.GB28181.sipServer.password || "12345678";
-    this.id=config.GB28181.sipServer.serial||"34020000002000000001";
-    this.domain = config.GB28181.sipServer.realm || "3402000000";// SIP服务器域
+    this.id=config.GB28181.sipServer.serial||"42000000402000000001";
+    this.domain = config.GB28181.sipServer.realm || "4200000040";// SIP服务器域
     this.config = config;
     // 临时用户信息
     this.userinfo = {};
