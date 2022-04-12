@@ -50,7 +50,7 @@ class NodeSIPServer {
       // 未指定方法的回复
       if (!request.method) {
         let userid = SIP.parseUri(request.headers.from.uri).user;
-        switch(request.status) {
+        switch (request.status) {
         case 100:
           Logger.info(`[${userid}] Retrying`);
           break;

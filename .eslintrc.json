@@ -15,6 +15,10 @@
     "no-trailing-spaces": "error",
     "quotes": ["error", "double"],
     "semi": ["error", "always"],
-    "spaced-comment": ["error", "always"]
+    "spaced-comment": ["error", "always"],
+    "no-tabs": "error",
+    "keyword-spacing": ["error", {
+      "before": true
+    }]
   }
 }
