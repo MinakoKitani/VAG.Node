@@ -80,43 +80,43 @@ async function realplay(req, res) {
 
 //回看请求
 async function playback(req, res) {
-    let result = { result: true, message: 'OK' };
+    let result = { stat: 'OK' };
 
-    if (this.sessions.has(req.params.device)) {
-        let session = this.sessions.get(req.params.device);
+    if (this.sessions.has(req.body.deviceId)) {
+        let session = this.sessions.get(req.body.deviceId);
 
         //判断当前设备通道里是否存在通道编码
-        let channelId = req.params.channel;
+        let channelId = req.body.channelId;
 
         let channel = session.catalog.devicelist.find(t => t.DeviceID === channelId);
 
         if (channel) {
-            switch (req.params.action) {
+            switch (req.body.action) {
                 case 'start':
                     {
-                        result = await session.sendPlaybackMessage(req.params.channel, req.params.begin, req.params.end, req.params.host, req.params.port, req.params.mode);
+                        result = await session.sendPlaybackMessage(req.body.channelId, req.body.begin, req.body.end, req.body.mediaHost, req.body.mediaPost, req.body.mode);
                     }
                     break;
                 case 'stop':
                     {
-                        result = await session.sendStopPlayBackMessage(req.params.channel, req.params.begin, req.params.end, req.params.host, req.params.port);
+                        result = await session.sendStopPlayBackMessage(req.body.channelId, req.body.begin, req.body.end, req.body.mediaHost, req.body.mediaPost);
                     }
                     break;
                 default:
                     {
-                        result.result = false;
+                        result.stat = 'error';
                         result.message = 'action error.';
                     }
                     break;
             }
         }
         else {
-            result.result = false;
+            result.stat = 'error';
             result.message = 'device not found.';
         }
     }
     else {
-        result.result = false;
+        result.stat = 'error';
         result.message = 'device not online';
     }
     res.json(result);
@@ -126,24 +126,24 @@ async function playback(req, res) {
 async function playControl(req, res) {
     let result = {};
 
-    if (this.sessions.has(req.params.device)) {
-        let session = this.sessions.get(req.params.device);
+    if (this.sessions.has(req.body.deviceId)) {
+        let session = this.sessions.get(req.body.deviceId);
 
         //判断当前设备通道里是否存在通道编码
-        let channelId = req.params.channel;
+        let channelId = req.body.channelId;
 
         let channel = session.catalog.devicelist.find(t => t.DeviceID === channelId);
 
         if (channel) {
-            result = await session.sendPlayControlMessage(req.params.channel, req.params.begin, req.params.end, req.params.cmd, req.params.value);
+            result = await session.sendPlayControlMessage(req.body.channelId, req.body.begin, req.body.end, req.body.controlCode, req.body.value);
         }
         else {
-            result.result = false;
+            result.stat = "error";
             result.message = 'device not found.';
         }
     }
     else {
-        result.result = false;
+        result.stat = "error";
         result.message = 'device not online.';
     }
     res.json(result);
@@ -179,39 +179,37 @@ function ptzControl(req, res) {
 
 //录像文件查询
 async function recordQuery(req, res) {
-    let result = {};
+    let result = { stat: 'OK' };
 
-    if (this.sessions.has(req.params.device)) {
-        let session = this.sessions.get(req.params.device);
+    if (this.sessions.has(req.body.deviceId)) {
+        let session = this.sessions.get(req.body.deviceId);
 
         //判断当前设备通道里是否存在通道编码
-        let channelId = req.params.channel;
+        let channelId = req.body.channelId;
         let channel = session.catalog.devicelist.find(t => t.DeviceID === channelId);
 
         if (channel) {
-            if (req.params.begin < req.params.end) {
+            if (req.body.begin < req.body.end) {
 
                 //unix时间转换
-                var beginTime = new Date(req.params.begin * 1000).toJSON();
-                var endTime = new Date(req.params.end * 1000).toJSON();
+                var beginTime = new Date(req.body.begin * 1000).toJSON();
+                var endTime = new Date(req.body.end * 1000).toJSON();
 
-                result.data = await session.getRecordInfos(req.params.channel, beginTime, endTime);
+                result.data = await session.getRecordInfos(req.body.channelId, beginTime, endTime);
 
-                result.result = true;
-                result.message = 'OK';
             }
             else {
-                result.result = false;
+                result.stat = 'error';
                 result.message = "beginTime 必须小于 endTime.";
             }
         }
         else {
-            result.result = false;
+            result.stat = 'error';
             result.message = 'device not found.';
         }
     }
     else {
-        result.result = false;
+        result.stat = 'error';
         result.message = 'device not online.';
     }
     res.json(result);

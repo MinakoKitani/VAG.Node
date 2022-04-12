@@ -1314,7 +1314,6 @@ function sequentialSearch(transaction, connect, addresses, rq, callback) {
       return next();
     else if (rs.status > 100)
       onresponse = callback;
-
     callback(rs);
   }
 
@@ -1323,7 +1322,6 @@ function sequentialSearch(transaction, connect, addresses, rq, callback) {
 
 exports.create = function (options, callback) {
   var errorLog = (options.logger && options.logger.error) || function () { };
-
   var transport = makeTransport(options, function (m, remote) {
     try {
       var t = m.method ? transaction.getServer(m) : transaction.getClient(m);

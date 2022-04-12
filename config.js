@@ -1,10 +1,11 @@
 var config = module.exports = {
     GB28181: {
         sipServer: {
+            mapHost: '192.168.0.96', // 服务器内网ip地址，海康由于nat穿透会打洞到服务器内网
             ping: 60,//心跳周期（秒）
             ping_timeout: 3,//最大心跳超时次数
             expires: 3600,//注册有效期（秒）
-            host: '192.168.0.37',//SIP服务器通讯IP地址,如果使用内网映射到公网IP需要设置为公网IP地址
+            host: '192.168.0.96',//SIP服务器通讯IP地址,如果使用内网映射到公网IP需要设置为公网IP地址
             serial: '42000000402000000001',//SIP服务器编号
             listen: 5060,//SIP通信端口
             realm: '4200000040',//SIP服务器域
@@ -28,7 +29,7 @@ var config = module.exports = {
     },
     // ZLMediaKit服务器配置
     ZLMediaKit: {
-        media_url: 'http://192.168.0.37:9094/',
+        media_url: 'http://localhost:9094/',
         secret: '035c73f7-bb6b-4889-a715-d9eb2d1925cc',
         vhost: '__defaultVhost__',
         app: 'rtp',

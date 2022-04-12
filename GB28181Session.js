@@ -252,9 +252,14 @@ class NodeSipSession {
 
                             if (content.RecordList) {
                                 if (recordinfos.total > 0) {
-                                    content.RecordList.Item.forEach(record => {
-                                        recordinfos.recordlist.push(record);
-                                    });
+                                    // 当只返回一条记录时，item不再是数组
+                                    if (Array.isArray(content.RecordList.Item)) {
+                                        content.RecordList.Item.forEach(record => {
+                                            recordinfos.recordlist.push(record);
+                                        });
+                                    } else {
+                                        recordinfos.recordlist.push(content.RecordList.Item);
+                                    }
                                 }
                             }
                         }
@@ -435,7 +440,7 @@ class NodeSipSession {
                 StartTime: startTime,
                 EndTime: endTime,
                 Secrecy: 0, //保密属性 0：不保密 1:涉密
-                Type: 'all', //录像产生类型 time/alarm/manual/all
+                Type: 'time', //录像产生类型 time/alarm/manual/all
                 IndistinctQuery: 0//字段代表模糊查询，缺省为 0。 值为 0 时：不进行模糊查询。此时根据 SIP 消息中 To 头域 URI 中的 ID 值确定查询录像位置，若 ID 值为本域系统 ID 则进行中心历史记录检索，若为前端设备 ID 则进行前端设备历史记录检
             }
         };
@@ -475,11 +480,11 @@ class NodeSipSession {
         return new Promise((resolve, reject) => {
             let isFinded = false;
             let findssrc = '';
-            let result = { result: true, message: 'OK' };
+            let result = { stat: 'OK' };
 
             for (var key in this.dialogs) {
                 let session = this.dialogs[key];
-                if (session.bye && session.port === rport && session.host === rhost && session.channelId === channelId && session.play === 'playback' && session.begin == begin && session.end == end) {
+                if (session.bye && session.port === nport && session.host === nhost && session.channelId === channelId && session.play === 'playback' && session.begin == begin && session.end == end) {
                     isFinded = true;
                     findssrc = session.ssrc;
                     break;
@@ -552,8 +557,7 @@ class NodeSipSession {
                         //错误信息
                         Logger.error(`[${that.TAG}] id=${that.id} ssrc=${ssrc} status=${response.status}`);
 
-                        result.result = false;
-                        result.data = { status: response.status };
+                        result.stat = "error";
                         result.message = `ErrorCode=${response.status}`;
 
                         resolve(result);
@@ -600,7 +604,7 @@ class NodeSipSession {
                                                 to: response.headers.to,
                                                 from: response.headers.from,
                                                 'call-id': response.headers['call-id'],
-                                                cseq: { method: 'BYE', seq: response.headers.cseq.seq++ }//需额外加1
+                                                cseq: { method: 'BYE', seq: response.headers.cseq.seq+1 }//需额外加1
                                             }
                                         }
 
@@ -625,7 +629,7 @@ class NodeSipSession {
     sendPlayControlMessage(channelId, begin, end, cmd, value) {
 
         return new Promise((resolve, reject) => {
-            let result = { result: false, message: 'OK' };
+            let result = { stat: 'OK' };
             //PLAY/PAUSE/TEARDOWN
 
             //播放速度，其中 1 为正常
@@ -714,11 +718,10 @@ class NodeSipSession {
                     Logger.log(`[${this.id}] INFO ${method[cmd]} result=${response.status}`);
 
                     if (response.status == 200) {
-                        result.result = true;
+                        result.stat = "OK";
                     }
                     else {
                         result.message = `ErrorCode=${response.status}`;
-                        result.data = { status: response.status };
                     }
 
                     resolve(result);
@@ -740,7 +743,6 @@ class NodeSipSession {
 
             for (var key in this.dialogs) {
                 let session = this.dialogs[key];
-                Logger.log('sessicon', session)
                 if (session.bye && session.port === rport && session.host === rhost && session.channelId === channelId && session.play === 'realplay') {
                     isFinded = true;
                     findssrc = session.ssrc;
@@ -814,7 +816,6 @@ class NodeSipSession {
                         Logger.error(`[${that.id}] ssrc=${ssrc} status=${response.status}`);
 
                         result.stat = 'error';
-                        result.data = { status: response.status };
                         result.message = `ErrorCode=${response.status}`;
 
                         resolve(result);
@@ -901,11 +902,15 @@ class NodeSipSession {
 
                     this.uas.send(session.bye, (response) => {
                         Logger.log(`[${this.id}] StopRealPlay status=${response.status}`);
-                        delete this.dialogs[key];
+                        if (response.status == 200 || response.status == 481 || response.status == 486) {
+                            delete this.dialogs[key];
+                        }
+                        else {
+                            result.message = `ErrorCode=${response.status}`;
+                        }
                     });
-
-                    result.stat = 'OK';
-                    result.message = '';
+                    result.stat = "OK";
+                    delete result.message;
                 }
             }
 
@@ -916,7 +921,7 @@ class NodeSipSession {
     //停止录像回看
     async sendStopPlayBackMessage(channelId, begin, end, nhost, nport) {
 
-        let result = { result: false, message: 'not find dialog.' };
+        let result = { stat: "error", message: 'not find dialog.' };
 
         for (var key in this.dialogs) {
             //搜索满足条件的会话
@@ -931,7 +936,9 @@ class NodeSipSession {
                 //发送BYE
                 this.uas.send(session.bye, (response) => {
                     Logger.log(`[${this.id}] StopPlayback status=${response.status}`);
-                    delete this.dialogs[key];
+                    if (response.status == 200 || response.status == 481 || response.status == 486) {
+                        delete this.dialogs[key];
+                    }
                 });
 
                 break;
@@ -955,7 +962,7 @@ class NodeSipSession {
                 //如果是查询有返回多条消息，还需等待。
                 let result = this.callbacks[id](content.Response);
 
-                if (result)
+                if (result) 
                     delete this.callbacks[id];
             }
         }

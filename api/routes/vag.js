@@ -7,9 +7,9 @@ module.exports = (context) => {
   router.post('/devices/catalog', vagController.getCatalog.bind(context));
   router.post('/devices/realplay', vagController.realplay.bind(context));
   router.post('/devices/ptz', vagController.ptzControl.bind(context));
-  router.get('/devices/:device/:channel/playback/:action/:begin/:end/:host/:port/:mode', vagController.playback.bind(context));
-  router.get('/devices/:device/:channel/playback/control/:begin/:end/:cmd/:value', vagController.playControl.bind(context));
-  router.get('/devices/:device/:channel/record/query/:begin/:end', vagController.recordQuery.bind(context));
+  router.post('/devices/record/query', vagController.recordQuery.bind(context));
+  router.post('/devices/playback', vagController.playback.bind(context));
+  router.post('/devices/playback/control', vagController.playControl.bind(context));
   router.post('/ZLMediaKit/on_stream_none_reader',vagController.closeStream.bind(context));
   router.get('/media/snap/:stream', vagController.snap.bind(context));
   router.get('/media/startRecord/:stream', vagController.startRecord.bind(context));

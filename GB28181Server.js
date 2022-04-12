@@ -75,7 +75,7 @@ class NodeSIPServer {
         //处理消息
         context.nodeEvent.on('message', (request) => {
 
-            this.uas.send(SIP.makeResponse(request, 200, 'Ok'));
+            this.uas.send(SIP.makeResponse(request, 200, 'OK'));
 
             let userid = SIP.parseUri(request.headers.from.uri).user;
             //处理消息
@@ -87,7 +87,7 @@ class NodeSIPServer {
 
         // 处理摄像头主动发bye信令，推流的服务器有问题
         context.nodeEvent.on('bye', (request) => {
-            this.uas.send(SIP.makeResponse(request, 200, 'Ok'));
+            this.uas.send(SIP.makeResponse(request, 200, 'OK'));
             let userid = SIP.parseUri(request.headers.from.uri).user;
             if (context.sessions.has(userid)) {
                 let session = context.sessions.get(userid)
@@ -179,10 +179,11 @@ class NodeSIPServer {
 
                     let dialogs = [];
 
-                    context.dialogs.forEach(dialog => {
-                        if (dialog.deviceId === userId)
-                            dialogs.push(dialog);
-                    });
+                    if (context.dialogs)
+                        context.dialogs.forEach(dialog => {
+                            if (dialog.deviceId === userId)
+                                dialogs.push(dialog);
+                        });
 
                     //删除对话
                     dialogs.forEach(dialog => {
@@ -213,7 +214,7 @@ class NodeSIPServer {
                 context.nodeEvent.emit('logout', context.sessions.get(userId));
         }
 
-        //通过验证 ,增加 Date 字段 （上下级和设备之间校时功能） 
+        //通过验证,增加 Date 字段,上下级和设备之间校时功能
         this.uas.send(SIP.makeResponse(request, 200, 'OK', { headers: { date: this.getNowTimeParse(), expires: (expires || this.expires) } }));
     }
 
