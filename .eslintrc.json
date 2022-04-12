@@ -1,0 +1,20 @@
+{
+  "root": true,
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
+  "rules": {
+    "no-extra-boolean-cast": "off",
+    "node/handle-callback-err": "off",
+    "space-before-function-paren": "off",
+    "no-use-before-define": "off",
+    "multiline-ternary": "off",
+    "block-spacing": "error",
+    "eol-last": "error",
+    "indent": ["error", 2],
+    "no-trailing-spaces": "error",
+    "quotes": ["error", "double"],
+    "semi": ["error", "always"],
+    "spaced-comment": ["error", "always"]
+  }
+}

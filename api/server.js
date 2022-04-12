@@ -1,19 +1,12 @@
-//
-//  Created by Mingliang Chen on 17/8/1.
-//  illuspas[a]gmail.com
-//  Copyright (c) 2018 Nodemedia. All rights reserved.
-//
-
-
-const Fs = require('fs');
-const Http = require('http');
-const Express = require('express');
+const Fs = require("fs");
+const Http = require("http");
+const Express = require("express");
 const bodyParser = require("body-parser");
-const basicAuth = require('basic-auth-connect');
+const basicAuth = require("basic-auth-connect");
 const HTTP_PORT = 80;
-const Logger = require('../core/logger');
-const context = require('../core/ctx');
-const vagRoute = require('./routes/vag');
+const Logger = require("../core/logger");
+const context = require("../core/ctx");
+const vagRoute = require("./routes/vag");
 
 class NodeHttpServer {
   constructor(config) {
@@ -22,12 +15,12 @@ class NodeHttpServer {
     this.port = config.VAG.http.port = config.VAG.http.port ? config.VAG.http.port : HTTP_PORT;
     let app = Express();
 
-    app.all('*', function (req, res, next) {
-      res.header('Access-Control-Allow-Origin', '*');    
-      res.header('Access-Control-Allow-Headers', 'Content-Type');      
-      res.header('Access-Control-Allow-Methods', '*');      
-      res.header('Content-Type', 'application/json;charset=utf-8');      
-      next();      
+    app.all("*", function (req, res, next) {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "Content-Type");
+      res.header("Access-Control-Allow-Methods", "*");
+      res.header("Content-Type", "application/json;charset=utf-8");
+      next();
     });
 
     // 使用 body-parser 中间
@@ -35,15 +28,15 @@ class NodeHttpServer {
     app.use(bodyParser.json());
 
     if (this.config.VAG.auth && this.config.VAG.auth.api) {
-      app.use('/api/*', basicAuth(this.config.VAG.auth.api_user, this.config.VAG.auth.api_pass));
+      app.use("/api/*", basicAuth(this.config.VAG.auth.api_user, this.config.VAG.auth.api_pass));
     }
 
-    app.use('/api/v1/camera', vagRoute(context));
+    app.use("/api/v1/camera", vagRoute(context));
 
-    app.get('/', (req, res, next) => {
-      res.setHeader('Content-type', 'application/json');
-      res.setHeader('Server', 'VAG');
-      res.send('{"success":true,"name":"YTMS-VAG 网关","version":"1.0.0.0"}');
+    app.get("/", (req, res, next) => {
+      res.setHeader("Content-type", "application/json");
+      res.setHeader("Server", "VAG");
+      res.send("{\"success\":true,\"name\":\"YTMS-VAG 网关\",\"version\":\"1.0.0.0\"}");
       res.end();
     });
 
@@ -55,12 +48,12 @@ class NodeHttpServer {
       Logger.log(`Node Media Http Server started on port: ${this.port}`);
     });
 
-    this.httpServer.on('error', (e) => {
+    this.httpServer.on("error", (e) => {
       Logger.error(`Node Media Http Server ${e}`);
     });
 
-    this.httpServer.on('close', () => {
-      Logger.log('Node Media Http Server Close.');
+    this.httpServer.on("close", () => {
+      Logger.log("Node Media Http Server Close.");
     });
   }
 
@@ -72,4 +65,4 @@ class NodeHttpServer {
   }
 }
 
-module.exports = NodeHttpServer
+module.exports = NodeHttpServer;

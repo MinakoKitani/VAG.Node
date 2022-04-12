@@ -4,7 +4,8 @@
   "description": "A Node.js implementation of GB28181 Video Streaming Agent Server",
   "main": "index.js",
   "scripts": {
-    "test": "node vag.js"
+    "test": "node vag.js",
+    "lint": "eslint .eslintrc.json"
   },
   "repository": {
     "type": "git",
@@ -36,5 +37,8 @@
   },
   "engines": {
     "node": ">=8.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.13.0"
   }
 }

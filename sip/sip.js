@@ -1,17 +1,17 @@
-var util = require('util');
-var net = require('net');
-var dns = require('dns');
-var assert = require('assert');
-var dgram = require('dgram');
-var tls = require('tls');
-var os = require('os');
-var crypto = require('crypto');
-var iconv = require('iconv-lite');
-var WebSocket = require('ws');
+var util = require("util");
+var net = require("net");
+var dns = require("dns");
+var assert = require("assert");
+var dgram = require("dgram");
+var tls = require("tls");
+var os = require("os");
+var crypto = require("crypto");
+var iconv = require("iconv-lite");
+var WebSocket = require("ws");
 
 function debug(e) {
   if (e.stack) {
-    util.debug(e + '\n' + e.stack);
+    util.debug(e + "\n" + e.stack);
   }
   else
     util.debug(util.inspect(e));
@@ -19,16 +19,16 @@ function debug(e) {
 
 function toBase64(s) {
   switch (s.length % 3) {
-    case 1:
-      s += '  ';
-      break;
-    case 2:
-      s += ' ';
-      break;
-    default:
+  case 1:
+    s += "  ";
+    break;
+  case 2:
+    s += " ";
+    break;
+  default:
   }
 
-  return (new Buffer.from(s)).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+  return (new Buffer.from(s)).toString("base64").replace(/\//g, "_").replace(/\+/g, "-");
 }
 // Actual stack code begins here
 
@@ -90,13 +90,13 @@ function parseMultiHeader(parser, d, h) {
 }
 
 function parseGenericHeader(d, h) {
-  return h ? h + ',' + d.s : d.s;
+  return h ? h + "," + d.s : d.s;
 }
 
 function parseAOR(data) {
   var r = applyRegex(/((?:[\w\-.!%*_+`'~]+)(?:\s+[\w\-.!%*_+`'~]+)*|"[^"\\]*(?:\\.[^"\\]*)*")?\s*\<\s*([^>]*)\s*\>|((?:[^\s@"<]@)?[^\s;]+)/g, data);
 
-  return parseParams(data, { name: r[1], uri: r[2] || r[3] || '' });
+  return parseParams(data, { name: r[1], uri: r[2] || r[3] || "" });
 }
 exports.parseAOR = parseAOR;
 
@@ -142,45 +142,45 @@ function parseAuthenticationInfoHeader(d) {
 }
 
 var compactForm = {
-  i: 'call-id',
-  m: 'contact',
-  e: 'contact-encoding',
-  l: 'content-length',
-  c: 'content-type',
-  f: 'from',
-  s: 'subject',
-  k: 'supported',
-  t: 'to',
-  v: 'via'
+  i: "call-id",
+  m: "contact",
+  e: "contact-encoding",
+  l: "content-length",
+  c: "content-type",
+  f: "from",
+  s: "subject",
+  k: "supported",
+  t: "to",
+  v: "via"
 };
 
 var parsers = {
-  'to': parseAOR,
-  'from': parseAOR,
-  'contact': function (v, h) {
-    if (v == '*')
+  "to": parseAOR,
+  "from": parseAOR,
+  "contact": function (v, h) {
+    if (v == "*")
       return v;
     else
       return parseMultiHeader(parseAOR, v, h);
   },
-  'route': parseMultiHeader.bind(0, parseAorWithUri),
-  'record-route': parseMultiHeader.bind(0, parseAorWithUri),
-  'path': parseMultiHeader.bind(0, parseAorWithUri),
-  'cseq': parseCSeq,
-  'content-length': function (v) { return +v.s; },
-  'via': parseMultiHeader.bind(0, parseVia),
-  'www-authenticate': parseMultiHeader.bind(0, parseAuthHeader),
-  'proxy-authenticate': parseMultiHeader.bind(0, parseAuthHeader),
-  'authorization': parseMultiHeader.bind(0, parseAuthHeader),
-  'proxy-authorization': parseMultiHeader.bind(0, parseAuthHeader),
-  'authentication-info': parseAuthenticationInfoHeader,
-  'refer-to': parseAOR
+  "route": parseMultiHeader.bind(0, parseAorWithUri),
+  "record-route": parseMultiHeader.bind(0, parseAorWithUri),
+  "path": parseMultiHeader.bind(0, parseAorWithUri),
+  "cseq": parseCSeq,
+  "content-length": function (v) { return +v.s; },
+  "via": parseMultiHeader.bind(0, parseVia),
+  "www-authenticate": parseMultiHeader.bind(0, parseAuthHeader),
+  "proxy-authenticate": parseMultiHeader.bind(0, parseAuthHeader),
+  "authorization": parseMultiHeader.bind(0, parseAuthHeader),
+  "proxy-authorization": parseMultiHeader.bind(0, parseAuthHeader),
+  "authentication-info": parseAuthenticationInfoHeader,
+  "refer-to": parseAOR
 };
 
 function parse(data) {
   data = data.split(/\r\n(?![ \t])/);
 
-  if (data[0] === '')
+  if (data[0] === "")
     return;
 
   var m = {};
@@ -206,7 +206,7 @@ function parse(data) {
 }
 
 function parseUri(s) {
-  if (typeof s === 'object')
+  if (typeof s === "object")
     return s;
 
   var re = /^(sips?):(?:([^\s>:@]+)(?::([^\s@>]+))?@)?([\w\-\.]+)(?::(\d+))?((?:;[^\s=\?>;]+(?:=[^\s?\;]+)?)*)(?:\?(([^\s&=>]+=[^\s&=>]+)(&[^\s&=>]+=[^\s&=>]+)*))?$/;
@@ -222,55 +222,55 @@ function parseUri(s) {
       host: r[4],
       port: +r[5],
       params: (r[6].match(/([^;=]+)(=([^;=]+))?/g) || [])
-        .map(function (s) { return s.split('='); })
+        .map(function (s) { return s.split("="); })
         .reduce(function (params, x) { params[x[0]] = x[1] || null; return params; }, {}),
-      headers: ((r[7] || '').match(/[^&=]+=[^&=]+/g) || [])
-        .map(function (s) { return s.split('=') })
+      headers: ((r[7] || "").match(/[^&=]+=[^&=]+/g) || [])
+        .map(function (s) { return s.split("="); })
         .reduce(function (params, x) { params[x[0]] = x[1]; return params; }, {})
-    }
+    };
   }
 }
 
 exports.parseUri = parseUri;
 
 function stringifyVersion(v) {
-  return v || '2.0';
+  return v || "2.0";
 }
 
 function stringifyParams(params) {
-  var s = '';
+  var s = "";
   for (var n in params) {
-    s += ';' + n + (params[n] ? '=' + params[n] : '');
+    s += ";" + n + (params[n] ? "=" + params[n] : "");
   }
 
   return s;
 }
 
 function stringifyUri(uri) {
-  if (typeof uri === 'string')
+  if (typeof uri === "string")
     return uri;
 
-  var s = (uri.schema || 'sip') + ':';
+  var s = (uri.schema || "sip") + ":";
 
   if (uri.user) {
     if (uri.password)
-      s += uri.user + ':' + uri.password + '@';
+      s += uri.user + ":" + uri.password + "@";
     else
-      s += uri.user + '@';
+      s += uri.user + "@";
   }
 
   s += uri.host;
 
   if (uri.port)
-    s += ':' + uri.port;
+    s += ":" + uri.port;
 
   if (uri.params)
     s += stringifyParams(uri.params);
 
   if (uri.headers) {
-    var h = Object.keys(uri.headers).map(function (x) { return x + '=' + uri.headers[x]; }).join('&');
+    var h = Object.keys(uri.headers).map(function (x) { return x + "=" + uri.headers[x]; }).join("&");
     if (h.length)
-      s += '?' + h;
+      s += "?" + h;
   }
   return s;
 }
@@ -278,19 +278,19 @@ function stringifyUri(uri) {
 exports.stringifyUri = stringifyUri;
 
 function stringifyAOR(aor) {
-  return (aor.name || '') + ' <' + stringifyUri(aor.uri) + '>' + stringifyParams(aor.params);
+  return (aor.name || "") + " <" + stringifyUri(aor.uri) + ">" + stringifyParams(aor.params);
 }
 
 function stringifyAuthHeader(a) {
   var s = [];
 
   for (var n in a) {
-    if (n !== 'scheme' && a[n] !== undefined) {
-      s.push(n + '=' + a[n]);
+    if (n !== "scheme" && a[n] !== undefined) {
+      s.push(n + "=" + a[n]);
     }
   }
 
-  return a.scheme ? a.scheme + ' ' + s.join(',') : s.join(',');
+  return a.scheme ? a.scheme + " " + s.join(",") : s.join(",");
 }
 
 exports.stringifyAuthHeader = stringifyAuthHeader;
@@ -299,54 +299,54 @@ var stringifiers = {
   via: function (h) {
     return h.map(function (via) {
       if (via.host) {
-        return 'Via: SIP/' + stringifyVersion(via.version) + '/' + via.protocol.toUpperCase() + ' ' + via.host + (via.port ? ':' + via.port : '') + stringifyParams(via.params) + '\r\n';
+        return "Via: SIP/" + stringifyVersion(via.version) + "/" + via.protocol.toUpperCase() + " " + via.host + (via.port ? ":" + via.port : "") + stringifyParams(via.params) + "\r\n";
       }
       else {
-        return '';
+        return "";
       }
-    }).join('');
+    }).join("");
   },
   to: function (h) {
-    return 'To: ' + stringifyAOR(h) + '\r\n';
+    return "To: " + stringifyAOR(h) + "\r\n";
   },
   from: function (h) {
-    return 'From: ' + stringifyAOR(h) + '\r\n';
+    return "From: " + stringifyAOR(h) + "\r\n";
   },
   contact: function (h) {
-    return 'Contact: ' + ((h !== '*' && h.length) ? h.map(stringifyAOR).join(', ') : '*') + '\r\n';
+    return "Contact: " + ((h !== "*" && h.length) ? h.map(stringifyAOR).join(", ") : "*") + "\r\n";
   },
   route: function (h) {
-    return h.length ? 'Route: ' + h.map(stringifyAOR).join(', ') + '\r\n' : '';
+    return h.length ? "Route: " + h.map(stringifyAOR).join(", ") + "\r\n" : "";
   },
-  'record-route': function (h) {
-    return h.length ? 'Record-Route: ' + h.map(stringifyAOR).join(', ') + '\r\n' : '';
+  "record-route": function (h) {
+    return h.length ? "Record-Route: " + h.map(stringifyAOR).join(", ") + "\r\n" : "";
   },
-  'path': function (h) {
-    return h.length ? 'Path: ' + h.map(stringifyAOR).join(', ') + '\r\n' : '';
+  "path": function (h) {
+    return h.length ? "Path: " + h.map(stringifyAOR).join(", ") + "\r\n" : "";
   },
   cseq: function (cseq) {
-    return 'CSeq: ' + cseq.seq + ' ' + cseq.method + '\r\n';
+    return "CSeq: " + cseq.seq + " " + cseq.method + "\r\n";
   },
-  'www-authenticate': function (h) {
-    return h.map(function (x) { return 'WWW-Authenticate: ' + stringifyAuthHeader(x) + '\r\n'; }).join('');
+  "www-authenticate": function (h) {
+    return h.map(function (x) { return "WWW-Authenticate: " + stringifyAuthHeader(x) + "\r\n"; }).join("");
   },
-  'proxy-authenticate': function (h) {
-    return h.map(function (x) { return 'Proxy-Authenticate: ' + stringifyAuthHeader(x) + '\r\n'; }).join('');
+  "proxy-authenticate": function (h) {
+    return h.map(function (x) { return "Proxy-Authenticate: " + stringifyAuthHeader(x) + "\r\n"; }).join("");
   },
-  'authorization': function (h) {
-    return h.map(function (x) { return 'Authorization: ' + stringifyAuthHeader(x) + '\r\n' }).join('');
+  "authorization": function (h) {
+    return h.map(function (x) { return "Authorization: " + stringifyAuthHeader(x) + "\r\n"; }).join("");
   },
-  'proxy-authorization': function (h) {
-    return h.map(function (x) { return 'Proxy-Authorization: ' + stringifyAuthHeader(x) + '\r\n' }).join('');;
+  "proxy-authorization": function (h) {
+    return h.map(function (x) { return "Proxy-Authorization: " + stringifyAuthHeader(x) + "\r\n"; }).join("");;
   },
-  'authentication-info': function (h) {
-    return 'Authentication-Info: ' + stringifyAuthHeader(h) + '\r\n';
+  "authentication-info": function (h) {
+    return "Authentication-Info: " + stringifyAuthHeader(h) + "\r\n";
   },
-  'refer-to': function (h) { return 'Refer-To: ' + stringifyAOR(h) + '\r\n'; }
+  "refer-to": function (h) { return "Refer-To: " + stringifyAOR(h) + "\r\n"; }
 };
 
 function prettifyHeaderName(s) {
-  if (s == 'call-id') return 'Call-ID';
+  if (s == "call-id") return "Call-ID";
 
   return s.replace(/\b([a-z])/g, function (a) { return a.toUpperCase(); });
 }
@@ -354,24 +354,24 @@ function prettifyHeaderName(s) {
 function stringify(m) {
   var s;
   if (m.status) {
-    s = 'SIP/' + stringifyVersion(m.version) + ' ' + m.status + ' ' + m.reason + '\r\n';
+    s = "SIP/" + stringifyVersion(m.version) + " " + m.status + " " + m.reason + "\r\n";
   }
   else {
-    s = m.method + ' ' + stringifyUri(m.uri) + ' SIP/' + stringifyVersion(m.version) + '\r\n';
+    s = m.method + " " + stringifyUri(m.uri) + " SIP/" + stringifyVersion(m.version) + "\r\n";
   }
 
-  m.headers['content-length'] = (m.content || '').length;
+  m.headers["content-length"] = (m.content || "").length;
 
   for (var n in m.headers) {
     if (typeof m.headers[n] !== "undefined") {
-      if (typeof m.headers[n] === 'string' || !stringifiers[n])
-        s += prettifyHeaderName(n) + ': ' + m.headers[n] + '\r\n';
+      if (typeof m.headers[n] === "string" || !stringifiers[n])
+        s += prettifyHeaderName(n) + ": " + m.headers[n] + "\r\n";
       else
         s += stringifiers[n](m.headers[n], n);
     }
   }
 
-  s += '\r\n';
+  s += "\r\n";
 
   if (m.content)
     s += m.content;
@@ -384,13 +384,13 @@ exports.stringify = stringify;
 function makeResponse(rq, status, reason, extension) {
   var rs = {
     status: status,
-    reason: reason || '',
+    reason: reason || "",
     version: rq.version,
     headers: {
       via: rq.headers.via,
       to: rq.headers.to,
       from: rq.headers.from,
-      'call-id': rq.headers['call-id'],
+      "call-id": rq.headers["call-id"],
       cseq: rq.headers.cseq
     }
   };
@@ -406,7 +406,7 @@ function makeResponse(rq, status, reason, extension) {
 exports.makeResponse = makeResponse;
 
 function clone(o, deep) {
-  if (typeof o === 'object') {
+  if (typeof o === "object") {
     var r = Array.isArray(o) ? [] : {};
     Object.keys(o).forEach(function (k) { r[k] = deep ? clone(o[k], deep) : o[k]; });
     return r;
@@ -427,17 +427,17 @@ exports.copyMessage = function (msg, deep) {
     content: msg.content
   };
 
-  // always copy via array 
+  // always copy via array
   r.headers.via = clone(msg.headers.via);
 
   return r;
-}
+};
 
 function defaultPort(proto) {
-  return proto.toUpperCase() === 'TLS' ? 5061 : 5060;
+  return proto.toUpperCase() === "TLS" ? 5061 : 5060;
 }
 
-//转文本
+// 转文本
 function makeStreamParser(onMessage, onFlood, maxBytesHeaders, maxContentLength) {
 
   onFlood = onFlood || function () { };
@@ -445,14 +445,14 @@ function makeStreamParser(onMessage, onFlood, maxBytesHeaders, maxContentLength)
   maxContentLength = maxContentLength || 604800;
 
   var m;
-  var r = '';
+  var r = "";
 
   function headers(data) {
     r += data;
 
     if (r.length > maxBytesHeaders) {
 
-      r = '';
+      r = "";
 
       onFlood();
 
@@ -460,62 +460,62 @@ function makeStreamParser(onMessage, onFlood, maxBytesHeaders, maxContentLength)
 
     }
 
-    //GB2312
-    var a = iconv.decode(Buffer.from(r, 'binary'), 'gb2312').match(/^\s*([\S\s]*?)\r\n\r\n([\S\s]*)$/);
+    // GB2312
+    var a = iconv.decode(Buffer.from(r, "binary"), "gb2312").match(/^\s*([\S\s]*?)\r\n\r\n([\S\s]*)$/);
 
     if (a) {
       r = a[2];
       m = parse(a[1]);
 
-      if (m && m.headers['content-length'] !== undefined) {
+      if (m && m.headers["content-length"] !== undefined) {
 
-        if (m.headers['content-length'] > maxContentLength) {
+        if (m.headers["content-length"] > maxContentLength) {
 
-          r = '';
+          r = "";
 
           onFlood();
         }
 
         state = content;
-        content('');
+        content("");
       }
       else
-        headers('');
+        headers("");
     }
   }
 
   function content(data) {
     r += data;
 
-    if (r.length >= m.headers['content-length']) {
-      m.content = r.substring(0, m.headers['content-length']);
+    if (r.length >= m.headers["content-length"]) {
+      m.content = r.substring(0, m.headers["content-length"]);
 
       onMessage(m);
 
-      var s = r.substring(m.headers['content-length']);
+      var s = r.substring(m.headers["content-length"]);
       state = headers;
-      r = '';
+      r = "";
       headers(s);
     }
   }
 
   var state = headers;
 
-  return function (data) { state(data); }
+  return function (data) { state(data); };
 
 }
 exports.makeStreamParser = makeStreamParser;
 
 function parseMessage(s) {
 
-  //使用GB2312编码
-  var r = iconv.decode(s, 'gb2312').match(/^\s*([\S\s]*?)\r\n\r\n([\S\s]*)$/);
+  // 使用GB2312编码
+  var r = iconv.decode(s, "gb2312").match(/^\s*([\S\s]*?)\r\n\r\n([\S\s]*)$/);
   if (r) {
     var m = parse(r[1]);
 
     if (m) {
-      if (m.headers['content-length']) {
-        var c = Math.max(0, Math.min(m.headers['content-length'], r[2].length));
+      if (m.headers["content-length"]) {
+        var c = Math.max(0, Math.min(m.headers["content-length"], r[2].length));
         m.content = r[2].substring(0, c);
       }
       else {
@@ -533,7 +533,7 @@ function checkMessage(msg) {
     msg.headers &&
     Array.isArray(msg.headers.via) &&
     msg.headers.via.length > 0 &&
-    msg.headers['call-id'] &&
+    msg.headers["call-id"] &&
     msg.headers.to &&
     msg.headers.from &&
     msg.headers.cseq;
@@ -568,39 +568,39 @@ function makeStreamTransport(protocol, maxBytesHeaders, maxContentLength, connec
       stream.destroy();
     };
 
-    stream.setEncoding('binary');
-    stream.on('data', makeStreamParser(onMessage, onFlood, maxBytesHeaders, maxContentLength));
+    stream.setEncoding("binary");
+    stream.on("data", makeStreamParser(onMessage, onFlood, maxBytesHeaders, maxContentLength));
 
-    stream.on('close', function () {
+    stream.on("close", function () {
       if (flowid) delete flows[flowid];
       delete remotes[remoteid];
     });
-    stream.on('connect', register_flow);
+    stream.on("connect", register_flow);
 
-    stream.on('error', function () { });
-    stream.on('end', function () {
-      if (refs !== 0) stream.emit('error', new Error('remote peer disconnected'));
+    stream.on("error", function () { });
+    stream.on("end", function () {
+      if (refs !== 0) stream.emit("error", new Error("remote peer disconnected"));
       stream.end();
     });
 
-    stream.on('timeout', function () { if (refs === 0) stream.destroy(); });
+    stream.on("timeout", function () { if (refs === 0) stream.destroy(); });
     stream.setTimeout(120000);
     stream.setMaxListeners(10000);
 
     remotes[remoteid] = function (onError) {
       ++refs;
-      if (onError) stream.on('error', onError);
+      if (onError) stream.on("error", onError);
 
       return {
         release: function () {
-          if (onError) stream.removeListener('error', onError);
-          if (--refs === 0) stream.emit('no_reference');
+          if (onError) stream.removeListener("error", onError);
+          if (--refs === 0) stream.emit("no_reference");
         },
         send: function (m) {
-          stream.write(stringify(m), 'binary');
+          stream.write(stringify(m), "binary");
         },
         protocol: protocol
-      }
+      };
     };
 
     if (stream.localPort) register_flow();
@@ -632,7 +632,7 @@ function makeStreamTransport(protocol, maxBytesHeaders, maxContentLength, connec
 
 function makeTlsTransport(options, callback) {
   return makeStreamTransport(
-    'TLS',
+    "TLS",
     options.maxBytesHeaders,
     options.maxContentLength,
     function (port, host, callback) { return tls.connect(port, host, options.tls, callback); },
@@ -646,7 +646,7 @@ function makeTlsTransport(options, callback) {
 
 function makeTcpTransport(options, callback) {
   return makeStreamTransport(
-    'TCP',
+    "TCP",
     options.maxBytesHeaders,
     options.maxContentLength,
     function (port, host, callback) { return net.connect(port, host, callback); },
@@ -670,11 +670,11 @@ function makeWsTransport(options, callback) {
 
     flows[flowid] = ws;
 
-    ws.on('close', function () { delete flows[flowid]; });
-    ws.on('message', function (data) {
+    ws.on("close", function () { delete flows[flowid]; });
+    ws.on("message", function (data) {
       var msg = parseMessage(data);
       if (msg) {
-        callback(msg, { protocol: 'WS', address: remote.address, port: remote.port, local: local });
+        callback(msg, { protocol: "WS", address: remote.address, port: remote.port, local: local });
       }
     });
   }
@@ -682,15 +682,15 @@ function makeWsTransport(options, callback) {
   function makeClient(uri) {
     if (clients[uri]) return clients[uri]();
 
-    var socket = new WebSocket(uri, 'sip', { procotol: 'sip' }),
+    var socket = new WebSocket(uri, "sip", { procotol: "sip" }),
       queue = [],
       refs = 0;
 
     function send_connecting(m) { queue.push(stringify(m)); }
-    function send_open(m) { socket.send(new Buffer.from(typeof m === 'string' ? m : stringify(m), 'binary')); }
+    function send_open(m) { socket.send(new Buffer.from(typeof m === "string" ? m : stringify(m), "binary")); }
     var send = send_connecting;
 
-    socket.on('open', function () {
+    socket.on("open", function () {
       init(socket);
       send = send_open;
       queue.splice(0).forEach(send);
@@ -698,14 +698,14 @@ function makeWsTransport(options, callback) {
 
     function open(onError) {
       ++refs;
-      if (onError) socket.on('error', onError);
+      if (onError) socket.on("error", onError);
       return {
         send: function (m) { send(m); },
         release: function () {
-          if (onError) socket.removeListener('error', onError);
+          if (onError) socket.removeListener("error", onError);
           if (--refs === 0) socket.terminate();
         },
-        protocol: 'WS'
+        protocol: "WS"
       };
     };
 
@@ -714,7 +714,7 @@ function makeWsTransport(options, callback) {
 
   if (options.ws_port) {
     if (options.tls) {
-      var http = require('https');
+      var http = require("https");
       var server = new WebSocket.Server({
         server: http.createServer(options.tls, function (rq, rs) {
           rs.writeHead(200);
@@ -726,7 +726,7 @@ function makeWsTransport(options, callback) {
       var server = new WebSocket.Server({ port: options.ws_port });
     }
 
-    server.on('connection', init);
+    server.on("connection", init);
   }
 
   function get(flow) {
@@ -735,7 +735,7 @@ function makeWsTransport(options, callback) {
       return {
         send: function (m) { ws.send(stringify(m)); },
         release: function () { },
-        protocol: 'WS'
+        protocol: "WS"
       };
     } else {
       console.log("Failed to get ws for target. Target/flow was:");
@@ -749,14 +749,14 @@ function makeWsTransport(options, callback) {
     if (target.local)
       return get(target);
     else
-      return makeClient('ws://' + target.host + ':' + target.port)(onError);
+      return makeClient("ws://" + target.host + ":" + target.port)(onError);
   }
 
   return {
     get: open,
     open: open,
     destroy: function () { server.close(); }
-  }
+  };
 }
 
 function makeUdpTransport(options, callback) {
@@ -766,27 +766,27 @@ function makeUdpTransport(options, callback) {
     if (msg && checkMessage(msg)) {
       if (msg.method) {
         msg.headers.via[0].params.received = rinfo.address;
-        if (msg.headers.via[0].params.hasOwnProperty('rport'))
+        if (msg.headers.via[0].params.hasOwnProperty("rport"))
           msg.headers.via[0].params.rport = rinfo.port;
       }
 
-      callback(msg, { protocol: 'UDP', address: rinfo.address, port: rinfo.port, local: { address: address, port: port } });
+      callback(msg, { protocol: "UDP", address: rinfo.address, port: rinfo.port, local: { address: address, port: port } });
     }
   }
 
-  var address = options.address || '0.0.0.0';
+  var address = options.address || "0.0.0.0";
   var port = options.port || 5060;
 
-  var socket = dgram.createSocket(net.isIPv6(address) ? 'udp6' : 'udp4', onMessage);
+  var socket = dgram.createSocket(net.isIPv6(address) ? "udp6" : "udp4", onMessage);
   socket.bind(port, address);
 
   function open(remote, error) {
     return {
       send: function (m) {
         var s = stringify(m);
-        socket.send(new Buffer.from(s, 'binary'), 0, s.length, remote.port, remote.address);
+        socket.send(new Buffer.from(s, "binary"), 0, s.length, remote.port, remote.address);
       },
-      protocol: 'UDP',
+      protocol: "UDP",
       release: function () { }
     };
   };
@@ -795,7 +795,7 @@ function makeUdpTransport(options, callback) {
     open: open,
     get: open,
     destroy: function () { socket.close(); }
-  }
+  };
 }
 
 function makeTransport(options, callback) {
@@ -806,7 +806,7 @@ function makeTransport(options, callback) {
     callbackAndLog = function (m, remote, stream) {
       options.logger.recv(m, remote);
       callback(m, remote, stream);
-    }
+    };
   }
 
   if (options.udp === undefined || options.udp)
@@ -827,7 +827,7 @@ function makeTransport(options, callback) {
             m.headers.via[0].port = options.port || defaultPort(this.protocol);
             m.headers.via[0].protocol = this.protocol;
 
-            if (this.protocol === 'UDP' && (!options.hasOwnProperty('rport') || options.rport)) {
+            if (this.protocol === "UDP" && (!options.hasOwnProperty("rport") || options.rport)) {
               m.headers.via[0].params.rport = null;
             }
           }
@@ -890,11 +890,11 @@ var resolve4 = makeWellBehavingResolver(dns.resolve4);
 var resolve6 = makeWellBehavingResolver(dns.resolve6);
 
 function resolve(uri, action) {
-  if (uri.params.transport === 'ws')
-    return action([{ protocol: uri.schema === 'sips' ? 'WSS' : 'WS', host: uri.host, port: uri.port || (uri.schema === 'sips' ? 433 : 80) }]);
+  if (uri.params.transport === "ws")
+    return action([{ protocol: uri.schema === "sips" ? "WSS" : "WS", host: uri.host, port: uri.port || (uri.schema === "sips" ? 433 : 80) }]);
 
   if (net.isIP(uri.host)) {
-    var protocol = uri.params.transport || 'UDP';
+    var protocol = uri.params.transport || "UDP";
     return action([{ protocol: protocol, address: uri.host, port: uri.port || defaultPort(protocol) }]);
   }
 
@@ -910,7 +910,7 @@ function resolve(uri, action) {
   }
 
   if (uri.port) {
-    var protocols = uri.params.transport ? [uri.params.transport] : ['UDP', 'TCP', 'TLS'];
+    var protocols = uri.params.transport ? [uri.params.transport] : ["UDP", "TCP", "TLS"];
 
     resolve46(uri.host, function (err, address) {
       address = (address || []).map(function (x) { return protocols.map(function (p) { return { protocol: p, address: x, port: uri.port || defaultPort(p) }; }); })
@@ -919,13 +919,13 @@ function resolve(uri, action) {
     });
   }
   else {
-    var protocols = uri.params.transport ? [uri.params.transport] : ['tcp', 'udp', 'tls'];
+    var protocols = uri.params.transport ? [uri.params.transport] : ["tcp", "udp", "tls"];
 
     var n = protocols.length;
     var addresses = [];
 
     protocols.forEach(function (proto) {
-      resolveSrv('_sip._' + proto + '.' + uri.host, function (e, r) {
+      resolveSrv("_sip._" + proto + "." + uri.host, function (e, r) {
         --n;
 
         if (Array.isArray(r)) {
@@ -952,16 +952,16 @@ function resolve(uri, action) {
             });
           }
         }
-      })
+      });
     });
   }
 }
 
 exports.resolve = resolve;
 
-//transaction layer
+// transaction layer
 function generateBranch() {
-  return ['z9hG4bK', Math.round(Math.random() * 1000000)].join('');
+  return ["z9hG4bK", Math.round(Math.random() * 1000000)].join("");
 }
 
 exports.generateBranch = generateBranch;
@@ -1004,14 +1004,14 @@ function createInviteServerTransaction(transport, cleanup) {
 
       transport(rs);
     }
-  }
+  };
 
   var g, h;
   var completed = {
     enter: function () {
       g = setTimeout(function retry(t) {
         g = setTimeout(retry, t * 2, t * 2);
-        transport(rs)
+        transport(rs);
       }, 500, 500);
       h = setTimeout(sm.enter.bind(sm, terminated), 32000);
     },
@@ -1020,12 +1020,12 @@ function createInviteServerTransaction(transport, cleanup) {
       clearTimeout(h);
     },
     message: function (m) {
-      if (m.method === 'ACK')
-        sm.enter(confirmed)
+      if (m.method === "ACK")
+        sm.enter(confirmed);
       else
         transport(rs);
     }
-  }
+  };
 
   var timer_i;
   var confirmed = {
@@ -1047,7 +1047,7 @@ function createInviteServerTransaction(transport, cleanup) {
 
   sm.enter(proceeding);
 
-  return { send: sm.signal.bind(sm, 'send'), message: sm.signal.bind(sm, 'message'), shutdown: function () { sm.enter(terminated); } };
+  return { send: sm.signal.bind(sm, "send"), message: sm.signal.bind(sm, "message"), shutdown: function () { sm.enter(terminated); } };
 }
 
 function createServerTransaction(transport, cleanup) {
@@ -1074,7 +1074,7 @@ function createServerTransaction(transport, cleanup) {
 
   sm.enter(trying);
 
-  return { send: sm.signal.bind(sm, 'send'), message: sm.signal.bind(sm, 'message'), shutdown: function () { sm.enter(terminated); } };
+  return { send: sm.signal.bind(sm, "send"), message: sm.signal.bind(sm, "message"), shutdown: function () { sm.enter(terminated); } };
 }
 
 function createInviteClientTransaction(rq, transport, tu, cleanup, options) {
@@ -1125,14 +1125,14 @@ function createInviteClientTransaction(rq, transport, tu, cleanup, options) {
   };
 
   var ack = {
-    method: 'ACK',
+    method: "ACK",
     uri: rq.uri,
     headers: {
       from: rq.headers.from,
-      cseq: { method: 'ACK', seq: rq.headers.cseq.seq },
-      'call-id': rq.headers['call-id'],
+      cseq: { method: "ACK", seq: rq.headers.cseq.seq },
+      "call-id": rq.headers["call-id"],
       via: [rq.headers.via[0]],
-      'max-forwards': (options && options['max-forwards']) || 70
+      "max-forwards": (options && options["max-forwards"]) || 70
     }
   };
 
@@ -1165,11 +1165,11 @@ function createInviteClientTransaction(rq, transport, tu, cleanup, options) {
 
   process.nextTick(function () { sm.enter(calling); });
 
-  return { message: sm.signal.bind(sm, 'message'), shutdown: function () { sm.enter(terminated); } };
+  return { message: sm.signal.bind(sm, "message"), shutdown: function () { sm.enter(terminated); } };
 }
 
 function createClientTransaction(rq, transport, tu, cleanup) {
-  assert.ok(rq.method !== 'INVITE');
+  assert.ok(rq.method !== "INVITE");
 
   var sm = makeSM();
 
@@ -1178,8 +1178,8 @@ function createClientTransaction(rq, transport, tu, cleanup) {
     enter: function () {
       transport(rq);
       if (!transport.reliable)
-        e = setTimeout(function () { sm.signal('timerE', 500); }, 500);
-      f = setTimeout(function () { sm.signal('timerF'); }, 32000);
+        e = setTimeout(function () { sm.signal("timerE", 500); }, 500);
+      f = setTimeout(function () { sm.signal("timerF"); }, 32000);
     },
     leave: function () {
       clearTimeout(e);
@@ -1194,7 +1194,7 @@ function createClientTransaction(rq, transport, tu, cleanup) {
     },
     timerE: function (t) {
       transport(rq);
-      e = setTimeout(function () { sm.signal('timerE', t * 2); }, t * 2);
+      e = setTimeout(function () { sm.signal("timerE", t * 2); }, t * 2);
     },
     timerF: function () {
       tu(makeResponse(rq, 408));
@@ -1220,13 +1220,13 @@ function createClientTransaction(rq, transport, tu, cleanup) {
 
   process.nextTick(function () { sm.enter(trying); });
 
-  return { message: sm.signal.bind(sm, 'message'), shutdown: function () { sm.enter(terminated); } };
+  return { message: sm.signal.bind(sm, "message"), shutdown: function () { sm.enter(terminated); } };
 }
 
 function makeTransactionId(m) {
-  if (m.method === 'ACK')
-    return ['INVITE', m.headers['call-id'], m.headers.via[0].params.branch].join();
-  return [m.headers.cseq.method, m.headers['call-id'], m.headers.via[0].params.branch].join();
+  if (m.method === "ACK")
+    return ["INVITE", m.headers["call-id"], m.headers.via[0].params.branch].join();
+  return [m.headers.cseq.method, m.headers["call-id"], m.headers.via[0].params.branch].join();
 }
 
 function makeTransactionLayer(options, transport) {
@@ -1237,7 +1237,7 @@ function makeTransactionLayer(options, transport) {
     createServerTransaction: function (rq, cn) {
       var id = makeTransactionId(rq);
 
-      return server_transactions[id] = (rq.method === 'INVITE' ? createInviteServerTransaction : createServerTransaction)(
+      return server_transactions[id] = (rq.method === "INVITE" ? createInviteServerTransaction : createServerTransaction)(
         cn.send.bind(cn),
         function () {
           delete server_transactions[id];
@@ -1245,22 +1245,22 @@ function makeTransactionLayer(options, transport) {
         });
     },
     createClientTransaction: function (connection, rq, callback) {
-      if (rq.method !== 'CANCEL') rq.headers.via[0].params.branch = generateBranch();
+      if (rq.method !== "CANCEL") rq.headers.via[0].params.branch = generateBranch();
 
 
-      if (typeof rq.headers.cseq !== 'object')
+      if (typeof rq.headers.cseq !== "object")
         rq.headers.cseq = parseCSeq({ s: rq.headers.cseq, i: 0 });
 
       var send = connection.send.bind(connection);
-      send.reliable = connection.protocol.toUpperCase() !== 'UDP';
+      send.reliable = connection.protocol.toUpperCase() !== "UDP";
 
       var id = makeTransactionId(rq);
       return client_transactions[id] =
-        (rq.method === 'INVITE' ? createInviteClientTransaction : createClientTransaction)(rq, send, callback, function () {
+        (rq.method === "INVITE" ? createInviteClientTransaction : createClientTransaction)(rq, send, callback, function () {
           delete client_transactions[id];
           connection.release();
         },
-          options);
+        options);
     },
     getServer: function (m) {
       return server_transactions[makeTransactionId(m)];
@@ -1278,7 +1278,7 @@ function makeTransactionLayer(options, transport) {
 exports.makeTransactionLayer = makeTransactionLayer;
 
 function sequentialSearch(transaction, connect, addresses, rq, callback) {
-  if (rq.method !== 'CANCEL') {
+  if (rq.method !== "CANCEL") {
     if (!rq.headers.via) rq.headers.via = [];
     rq.headers.via.unshift({ params: {} });
   }
@@ -1327,16 +1327,16 @@ exports.create = function (options, callback) {
       var t = m.method ? transaction.getServer(m) : transaction.getClient(m);
 
       if (!t) {
-        if (m.method && m.method !== 'ACK') {
+        if (m.method && m.method !== "ACK") {
           var t = transaction.createServerTransaction(m, transport.get(remote));
           try {
             callback(m, remote);
           } catch (e) {
-            t.send(makeResponse(m, '500', 'Internal Server Error'));
+            t.send(makeResponse(m, "500", "Internal Server Error"));
             throw e;
           }
         }
-        else if (m.method === 'ACK') {
+        else if (m.method === "ACK") {
           callback(m, remote);
         }
       }
@@ -1355,13 +1355,13 @@ exports.create = function (options, callback) {
 
   function encodeFlowToken(flow) {
     var s = [flow.protocol, flow.address, flow.port, flow.local.address, flow.local.port].join();
-    var h = crypto.createHmac('sha1', rbytes);
+    var h = crypto.createHmac("sha1", rbytes);
     h.update(s);
-    return toBase64([h.digest('base64'), s].join());
+    return toBase64([h.digest("base64"), s].join());
   }
 
   function decodeFlowToken(token) {
-    var s = (new Buffer.from(token, 'base64')).toString('ascii').split(',');
+    var s = (new Buffer.from(token, "base64")).toString("ascii").split(",");
     if (s.length != 6) return;
 
     var flow = { protocol: s[1], address: s[2], port: +s[3], local: { address: s[4], port: +s[5] } };
@@ -1378,7 +1378,7 @@ exports.create = function (options, callback) {
       else {
         var hop = parseUri(m.uri);
 
-        if (typeof m.headers.route === 'string')
+        if (typeof m.headers.route === "string")
           m.headers.route = parsers.route({ s: m.headers.route, i: 0 });
 
         if (m.headers.route && m.headers.route.length > 0) {
@@ -1401,7 +1401,7 @@ exports.create = function (options, callback) {
           else
             resolve(hop, callback);
         })(function (addresses) {
-          if (m.method === 'ACK') {
+          if (m.method === "ACK") {
             if (!Array.isArray(m.headers.via))
               m.headers.via = [];
 
@@ -1430,7 +1430,7 @@ exports.create = function (options, callback) {
       }
     },
     encodeFlowUri: function (flow) {
-      return { schema: flow.protocol === 'TLS' ? 'sips' : 'sip', user: encodeFlowToken(flow), host: hostname, params: {} };
+      return { schema: flow.protocol === "TLS" ? "sips" : "sip", user: encodeFlowToken(flow), host: hostname, params: {} };
     },
     decodeFlowUri: function (uri) {
       uri = parseUri(uri);
@@ -1444,8 +1444,8 @@ exports.create = function (options, callback) {
       transaction.destroy();
       transport.destroy();
     }
-  }
-}
+  };
+};
 
 exports.start = function (options, callback) {
   var r = exports.create(options, callback);
@@ -1456,5 +1456,5 @@ exports.start = function (options, callback) {
   exports.decodeFlowUri = r.decodeFlowUri;
   exports.isFlowUri = r.isFlowUri;
   exports.hostname = r.hostname;
-}
+};
 
