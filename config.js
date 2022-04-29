@@ -1,11 +1,11 @@
 var config = module.exports = {
   GB28181: {
     sipServer: {
-      mapHost: "192.168.0.96", // 服务器内网ip地址，海康由于nat穿透会打洞到服务器内网
+      mapHost: "192.168.0.13", // 服务器内网ip地址，海康由于nat穿透会打洞到服务器内网, 转换了call-id
       ping: 60,// 心跳周期（秒）
       ping_timeout: 3,// 最大心跳超时次数
       expires: 3600,// 注册有效期（秒）
-      host: "192.168.0.96",// SIP服务器通讯IP地址,如果使用内网映射到公网IP需要设置为公网IP地址
+      host: "192.168.0.13",// SIP服务器通讯IP地址,如果使用内网映射到公网IP需要设置为公网IP地址
       serial: "42000000402000000001",// SIP服务器编号
       listen: 5060,// SIP通信端口
       realm: "4200000040",// SIP服务器域

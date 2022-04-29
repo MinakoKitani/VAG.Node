@@ -1,5 +1,5 @@
 
-const EventEmitter = require('events');
+const EventEmitter = require("events");
 
 let sessions = new Map();
 

@@ -668,17 +668,18 @@ class NodeSipSession {
       if (request && findssrc) {
 
         request.method = "INFO";
-        request["content-type"] = "application/MANSRTSP";
+        request["content-type"] = "Application/MANSRTSP";
+        request.headers["content-type"] = "Application/MANSRTSP";
         request.headers.cseq.method = "Info";
-        request.headers.cseq.seq = Math.floor(Math.random() * 100);
+        request.headers.cseq.seq = findSession.bye.headers.cseq.seq; // 同一个会话里的cseq不能使用随机数
         request.headers.contact = [{ uri: "sip:" + this.GBServerId + "@" + this.GBserverHost + ":" + this.GBServerPort }];
         switch (Number(cmd)) {
         // 播放/随机播放
         case 0:
           {
             request.content = "PLAY MANSRTSP/1.0\r\n" +
-                                `CSeq:${findSession.cseq}\r\n` +
-                                `Range:npt=${(value || "now-")}\r\n`;
+                                `CSeq: ${findSession.cseq}\r\n` +
+                                `Range: npt=${(value || "now-")}\r\n`;
           }
           break;
           // 快进/慢退
@@ -690,27 +691,30 @@ class NodeSipSession {
               speed = 2;
             }
 
-            request.content = "PLAY MANSRTSP/1.0\r\n" +
-                                `CSeq:${findSession.cseq}\r\n` +
-                                `Scale:${scale[value]}\r\n`;
+            request.content = "PLAY RTSP/1.0\r\n" +
+                                `CSeq: ${findSession.cseq}\r\n` +
+                                `Scale: ${scale[value]}\r\n` +
+                                "Range: npt=now-\r\n";
           }
           break;
           // 暂停(当前位置)
         case 2:
           {
             request.content = "PAUSE MANSRTSP/1.0\r\n" +
-                                `CSeq:${findSession.cseq}\r\n` +
-                                "PauseTime:now\r\n";
+                                `CSeq: ${findSession.cseq}\r\n` +
+                                "PauseTime: now\r\n";
           }
           break;
           // 停止
         case 3:
           {
             request.content = "TEARDOWN MANSRTSP/1.0\r\n" +
-                                `CSeq:${findSession.cseq}\r\n`;
+                                `CSeq: ${findSession.cseq}\r\n`;
           }
           break;
         }
+
+        let that = this;
 
         // 发送请求
         this.uas.send(request, (response) => {
@@ -718,6 +722,23 @@ class NodeSipSession {
           Logger.log(`[${this.id}] INFO ${method[cmd]} result=${response.status}`);
 
           if (response.status == 200) {
+            for (var key in that.dialogs) {
+              let session = that.dialogs[key];
+              if (session.bye && session.channelId === channelId && session.play === "playback" && session.begin == begin && session.end == end) {
+                // 断开会话请求
+                let byeRequest = {
+                  method: "BYE",
+                  uri: response.headers.contact[0].uri,
+                  headers: {
+                    to: response.headers.to,
+                    from: response.headers.from,
+                    "call-id": response.headers["call-id"],
+                    cseq: { method: "BYE", seq: response.headers.cseq.seq+1 } // 成功后需要将后续的cseq再+1
+                  }
+                };
+                that.dialogs[key].bye = byeRequest;
+              }
+            }
             result.stat = "OK";
           }
           else {
@@ -993,8 +1014,8 @@ class NodeSipSession {
               if (this.dialogs[key]) {
                 let session = this.dialogs[key];
                 if (session.bye && content.Notify.DeviceID == session.channelId) {
-                  this.uas.send(session.bye, (reqponse) => {
-                    if (reqponse.status == 200 || reqponse.status == 481)
+                  this.uas.send(session.bye, (response) => {
+                    if (response.status == 200 || response.status == 481)
                       delete this.dialogs[key];
                   });
                 }
@@ -1008,13 +1029,14 @@ class NodeSipSession {
     }
   }
 
-  // 处理摄像头主动发bye信令，推流的服务器有问题
+  // 处理摄像头主动发bye信令，推流的服务器有问题or录像机已回放完毕
   onBye(request) {
     for (var key in this.dialogs) {
       let session = this.dialogs[key];
       if (request.headers["call-id"] === session.bye.headers["call-id"]) {
         // 发送BYE,删除会话
-        Logger.log(`[${this.id}] ActiceStopPlayback check media server`);
+        if (session.play === "realplay") Logger.log(`[${this.id}] ActiceStopRealPlay check media server`);
+        if (session.play === "playback") Logger.log(`[${this.id}] StopPlayback`);
         delete this.dialogs[key];
 
         break;

@@ -1,4 +1,4 @@
-var util = require('util');
+var util = require("util");
 
 var parsers = {
   o: function(o) {
@@ -34,93 +34,93 @@ var parsers = {
 
 exports.parse = function(sdp) {
   var sdp = sdp.split(/\r\n/);
-  
+
   var root = {};
   var m;
   root.m = [];
 
-  for(var i = 0; i < sdp.length; ++i) {
+  for (var i = 0; i < sdp.length; ++i) {
     var tmp = /^(\w)=(.*)/.exec(sdp[i]);
-    
-    if(tmp) {
 
-    var c = (parsers[tmp[1]] || function(x) { return x;})(tmp[2]);
-    switch(tmp[1]) {
-    case 'm':
-      if(m) root.m.push(m);
-      m = c;
-      break;
-    case 'a':
-      var o = (m || root);
-      if(o.a === undefined) o.a = [];
-      o.a.push(c);
-      break;
-    default:
-      (m || root)[tmp[1]] = c;
-      break;
-    }
+    if (tmp) {
+
+      var c = (parsers[tmp[1]] || function(x) { return x; })(tmp[2]);
+      switch (tmp[1]) {
+      case "m":
+        if (m) root.m.push(m);
+        m = c;
+        break;
+      case "a":
+        var o = (m || root);
+        if (o.a === undefined) o.a = [];
+        o.a.push(c);
+        break;
+      default:
+        (m || root)[tmp[1]] = c;
+        break;
+      }
     }
   }
 
-  if(m) root.m.push(m);
-  
+  if (m) root.m.push(m);
+
   return root;
 };
 
 var stringifiers = {
   o: function(o) {
-    return [o.username || '-', o.id, o.version, o.nettype || 'IN', o.addrtype || 'IP4', o.address].join(' '); 
+    return [o.username || "-", o.id, o.version, o.nettype || "IN", o.addrtype || "IP4", o.address].join(" ");
   },
   c: function(c) {
-    return [c.nettype || 'IN', c.addrtype || 'IP4', c.address].join(' ');
+    return [c.nettype || "IN", c.addrtype || "IP4", c.address].join(" ");
   },
   m: function(m) {
-    return [m.media || 'audio', m.port, m.proto || 'RTP/AVP', m.fmt.join(' ')].join(' ');
+    return [m.media || "audio", m.port, m.proto || "RTP/AVP", m.fmt.join(" ")].join(" ");
   }
 };
 
 function stringifyParam(sdp, type, def) {
-  if(sdp[type] !== undefined) {
-    var stringifier = function(x) { return type + '=' + ((stringifiers[type] && stringifiers[type](x)) || x) + '\r\n'; };
+  if (sdp[type] !== undefined) {
+    var stringifier = function(x) { return type + "=" + ((stringifiers[type] && stringifiers[type](x)) || x) + "\r\n"; };
 
-    if(Array.isArray(sdp[type]))
-      return sdp[type].map(stringifier).join('');
+    if (Array.isArray(sdp[type]))
+      return sdp[type].map(stringifier).join("");
 
     return stringifier(sdp[type]);
   }
 
-  if(def !== undefined)
-    return type + '=' + def + '\r\n';
-  return '';
+  if (def !== undefined)
+    return type + "=" + def + "\r\n";
+  return "";
 }
 
 exports.stringify = function(sdp) {
-  var s = '';
-  
-  s += stringifyParam(sdp, 'v', 0);
-  s +=  stringifyParam(sdp, 'o');
-  s +=  stringifyParam(sdp, 's', '-');
-  s +=  stringifyParam(sdp, 'i');
-  s +=  stringifyParam(sdp, 'u');
-  s +=  stringifyParam(sdp, 'e');
-  s +=  stringifyParam(sdp, 'p');
-  s +=  stringifyParam(sdp, 'c');
-  s +=  stringifyParam(sdp, 'b');
-  s +=  stringifyParam(sdp, 't', '0 0');
-  s +=  stringifyParam(sdp, 'r');
-  s +=  stringifyParam(sdp, 'z');
-  s +=  stringifyParam(sdp, 'k');
-  s +=  stringifyParam(sdp, 'a');
+  var s = "";
+
+  s += stringifyParam(sdp, "v", 0);
+  s +=  stringifyParam(sdp, "o");
+  s +=  stringifyParam(sdp, "s", "-");
+  s +=  stringifyParam(sdp, "i");
+  s +=  stringifyParam(sdp, "u");
+  s +=  stringifyParam(sdp, "e");
+  s +=  stringifyParam(sdp, "p");
+  s +=  stringifyParam(sdp, "c");
+  s +=  stringifyParam(sdp, "b");
+  s +=  stringifyParam(sdp, "t", "0 0");
+  s +=  stringifyParam(sdp, "r");
+  s +=  stringifyParam(sdp, "z");
+  s +=  stringifyParam(sdp, "k");
+  s +=  stringifyParam(sdp, "a");
   sdp.m.forEach(function(m) {
-    s += stringifyParam({m:m}, 'm');
-    s +=  stringifyParam(m, 'i');
-    s +=  stringifyParam(m, 'c');
-    s +=  stringifyParam(m, 'b');
-    s +=  stringifyParam(m, 'k');
-    s +=  stringifyParam(m, 'a');
+    s += stringifyParam({m:m}, "m");
+    s +=  stringifyParam(m, "i");
+    s +=  stringifyParam(m, "c");
+    s +=  stringifyParam(m, "b");
+    s +=  stringifyParam(m, "k");
+    s +=  stringifyParam(m, "a");
   });
 
   return s;
-}
+};
 
 

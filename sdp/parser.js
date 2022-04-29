@@ -34,7 +34,7 @@ var parseReg = function (obj, location, content) {
   }
 };
 
-var grammar = require('./grammar');
+var grammar = require("./grammar");
 var validLine = RegExp.prototype.test.bind(/^([a-z])=(.*)/);
 
 exports.parse = function (sdp) {
@@ -46,7 +46,7 @@ exports.parse = function (sdp) {
   sdp.split(/(\r\n|\r|\n)/).filter(validLine).forEach(function (l) {
     var type = l[0];
     var content = l.slice(2);
-    if (type === 'm') {
+    if (type === "m") {
       media.push({rtp: [], fmtp: []});
       location = media[media.length-1]; // point at latest media line
     }
@@ -81,12 +81,12 @@ exports.parseParams = function (str) {
 exports.parseFmtpConfig = exports.parseParams;
 
 exports.parsePayloads = function (str) {
-  return str.toString().split(' ').map(Number);
+  return str.toString().split(" ").map(Number);
 };
 
 exports.parseRemoteCandidates = function (str) {
   var candidates = [];
-  var parts = str.split(' ').map(toIntIfInt);
+  var parts = str.split(" ").map(toIntIfInt);
   for (var i = 0; i < parts.length; i += 3) {
     candidates.push({
       component: parts[i],
@@ -98,17 +98,17 @@ exports.parseRemoteCandidates = function (str) {
 };
 
 exports.parseImageAttributes = function (str) {
-  return str.split(' ').map(function (item) {
-    return item.substring(1, item.length-1).split(',').reduce(paramReducer, {});
+  return str.split(" ").map(function (item) {
+    return item.substring(1, item.length-1).split(",").reduce(paramReducer, {});
   });
 };
 
 exports.parseSimulcastStreamList = function (str) {
-  return str.split(';').map(function (stream) {
-    return stream.split(',').map(function (format) {
+  return str.split(";").map(function (stream) {
+    return stream.split(",").map(function (format) {
       var scid, paused = false;
 
-      if (format[0] !== '~') {
+      if (format[0] !== "~") {
         scid = toIntIfInt(format);
       } else {
         scid = toIntIfInt(format.substring(1, format.length));

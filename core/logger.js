@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+const chalk = require("chalk");
 
 LOG_TYPES = {
   NONE: 0,
@@ -11,38 +11,38 @@ LOG_TYPES = {
 let logType = LOG_TYPES.NORMAL;
 
 const setLogType = (type) => {
-  if (typeof type !== 'number') return;
+  if (typeof type !== "number") return;
 
   logType = type;
 };
 
 const logTime = () => {
   let nowDate = new Date();
-  return nowDate.toLocaleDateString() + ' ' + nowDate.toLocaleTimeString([], { hour12: false });
+  return nowDate.toLocaleDateString() + " " + nowDate.toLocaleTimeString([], { hour12: false });
 };
 
 const log = (...args) => {
   if (logType < LOG_TYPES.NORMAL) return;
 
-  console.log(logTime(), process.pid, chalk.bold.green('[INFO]'), ...args);
+  console.log(logTime(), process.pid, chalk.bold.green("[INFO]"), ...args);
 };
 
 const error = (...args) => {
   if (logType < LOG_TYPES.ERROR) return;
 
-  console.log(logTime(), process.pid, chalk.bold.red('[ERROR]'), ...args);
+  console.log(logTime(), process.pid, chalk.bold.red("[ERROR]"), ...args);
 };
 
 const debug = (...args) => {
   if (logType < LOG_TYPES.DEBUG) return;
 
-  console.log(logTime(), process.pid, chalk.bold.blue('[DEBUG]'), ...args);
+  console.log(logTime(), process.pid, chalk.bold.blue("[DEBUG]"), ...args);
 };
 
 const ffdebug = (...args) => {
   if (logType < LOG_TYPES.FFDEBUG) return;
 
-  console.log(logTime(), process.pid, chalk.bold.blue('[FFDEBUG]'), ...args);
+  console.log(logTime(), process.pid, chalk.bold.blue("[FFDEBUG]"), ...args);
 };
 
 module.exports = {
@@ -50,4 +50,4 @@ module.exports = {
   setLogType,
 
   log, error, debug, ffdebug
-}
+};

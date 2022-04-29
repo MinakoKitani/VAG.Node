@@ -1,4 +1,4 @@
-var grammar = require('./grammar');
+var grammar = require("./grammar");
 
 // customized util.format - discards excess arguments and can void middle ones
 var formatRegExp = /%[sdv%]/g;
@@ -13,14 +13,14 @@ var format = function (formatStr) {
     var arg = args[i];
     i += 1;
     switch (x) {
-      case '%%':
-        return '%';
-      case '%s':
-        return String(arg);
-      case '%d':
-        return Number(arg);
-      case '%v':
-        return '';
+    case "%%":
+      return "%";
+    case "%s":
+      return String(arg);
+    case "%d":
+      return Number(arg);
+    case "%v":
+      return "";
     }
   });
   // NB: we discard excess arguments - they are typically undefined from makeLine
@@ -31,7 +31,7 @@ var makeLine = function (type, obj, location) {
     (obj.format(obj.push ? location : location[obj.name])) :
     obj.format;
 
-  var args = [type + '=' + str];
+  var args = [type + "=" + str];
   if (obj.names) {
     for (var i = 0; i < obj.names.length; i += 1) {
       var n = obj.names[i];
@@ -52,11 +52,11 @@ var makeLine = function (type, obj, location) {
 // RFC specified order
 // TODO: extend this with all the rest
 var defaultOuterOrder = [
-  'v', 'o', 's', 'i',
-  'u', 'e', 'p', 'c',
-  'b', 't', 'r', 'z', 'a', 'y'
+  "v", "o", "s", "i",
+  "u", "e", "p", "c",
+  "b", "t", "r", "z", "a", "y"
 ];
-var defaultInnerOrder = ['i', 'c', 'b', 'a', 'y'];
+var defaultInnerOrder = ["i", "c", "b", "a", "y"];
 
 
 module.exports = function (session, opts) {
@@ -66,11 +66,11 @@ module.exports = function (session, opts) {
     session.version = 0; // 'v=0' must be there (only defined version atm)
   }
   if (session.name == null) {
-    session.name = ' '; // 's= ' must be there if no meaningful name set
+    session.name = " "; // 's= ' must be there if no meaningful name set
   }
   session.media.forEach(function (mLine) {
     if (mLine.payloads == null) {
-      mLine.payloads = '';
+      mLine.payloads = "";
     }
   });
 
@@ -94,7 +94,7 @@ module.exports = function (session, opts) {
 
   // then for each media line, follow the innerOrder
   session.media.forEach(function (mLine) {
-    sdp.push(makeLine('m', grammar.m[0], mLine));
+    sdp.push(makeLine("m", grammar.m[0], mLine));
 
     innerOrder.forEach(function (type) {
       grammar[type].forEach(function (obj) {
@@ -110,5 +110,5 @@ module.exports = function (session, opts) {
     });
   });
 
-  return sdp.join('\r\n') + '\r\n';
+  return sdp.join("\r\n") + "\r\n";
 };

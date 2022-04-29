@@ -85,13 +85,23 @@ class NodeSIPServer {
       }
     });
 
-    // 处理摄像头主动发bye信令，推流的服务器有问题
+    // 处理摄像头主动发bye信令，推流的服务器有问题or录像机回放完
     context.nodeEvent.on("bye", (request) => {
       this.uas.send(SIP.makeResponse(request, 200, "OK"));
       let userid = SIP.parseUri(request.headers.from.uri).user;
-      if (context.sessions.has(userid)) {
-        let session = context.sessions.get(userid);
-        session.onBye(request);
+      for (var [key, value] of context.sessions) {
+        // 录像机里的通道摄像机
+        value.catalog.devicelist.forEach((item) => {
+          if (item.DeviceID === userid) {
+            let session = context.sessions.get(key);
+            session.onBye(request);
+          }
+        });
+        // 摄像机
+        if (key === userid) {
+          let session = context.sessions.get(userid);
+          session.onBye(request);
+        }
       }
     });
 
